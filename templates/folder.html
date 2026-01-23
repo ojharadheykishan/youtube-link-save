@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ folder_name }} - VideoHub</title>
+    <link rel="stylesheet" href="/static/css/youtube.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <a href="/" class="logo">
+            <i class="fas fa-play-circle"></i>
+            <span>VideoHub</span>
+        </a>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search in {{ folder_name }}...">
+        </div>
+        <div class="header-actions">
+            <button class="btn-icon" title="Add Video" onclick="goHome()">
+                <i class="fas fa-home"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <a href="/" class="sidebar-item">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Your Folders</div>
+                <div id="foldersList"></div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Folder Header -->
+            <section style="margin-bottom: 2rem; padding: 2rem; background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(255, 0, 0, 0.05)); border-radius: 12px; border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="font-size: 3rem; color: var(--primary-color);">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <div>
+                            <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ folder_name }}</h1>
+                            <p style="color: var(--text-secondary);"><i class="fas fa-play-circle"></i> {{ videos | length }} video{{ 's' if videos | length != 1 else '' }}</p>
+                        </div>
+                    </div>
+                    <button class="btn-secondary" onclick="openRenameModal('{{ folder_name }}')" style="padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-edit"></i> Rename
+                    </button>
+                    <button class="btn-secondary" onclick="deleteFolder('{{ folder_name }}')" style="padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 0.5rem; background: rgba(255, 0, 0, 0.2); border-color: #ff0000; color: #ff0000;">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <button class="btn-primary" onclick="openCreateSubfolderModal()" style="padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-folder-plus"></i> Create Subfolder
+                    </button>
+                    <button class="btn-primary" onclick="openAddVideoModal()" style="padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-plus-circle"></i> Add Video
+                    </button>
+                </div>
+            </section>
+
+            <!-- Rename Folder Modal -->
+            <div class="modal" id="renameFolderModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Rename Folder</h3>
+                        <button class="modal-close" onclick="closeRenameModal()">×</button>
+                    </div>
+                    <form onsubmit="submitRenameFolder(event)">
+                        <div class="form-group">
+                            <label>Current name:</label>
+                            <input type="text" id="currentFolderName" disabled style="background: var(--border-color); cursor: not-allowed;">
+                        </div>
+                        <div class="form-group">
+                            <label>New name:</label>
+                            <input type="text" id="newFolderName" placeholder="Enter new folder name" required autofocus>
+                        </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                            <button type="submit" class="btn-primary" style="flex: 1;">
+                                <i class="fas fa-check"></i> Rename
+                            </button>
+                            <button type="button" class="btn-secondary" onclick="closeRenameModal()" style="flex: 1;">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Videos Section -->
+            <section>
+                <h2 class="section-title">
+                    <i class="fas fa-video"></i> Videos
+                </h2>
+                <div class="videos-grid" id="videosGrid">
+                    {% if videos %}
+                        {% for video in videos %}
+                            <a href="/watch/{{ video.video_id }}" class="video-card" data-video-id="{{ video.video_id }}">
+                                <div class="video-thumbnail">
+                                    <img src="{% if 'thumbnails' in video.thumbnail_path %}{{ '/' + video.thumbnail_path }}{% else %}https://img.youtube.com/vi/{{ video.video_id }}/hqdefault.jpg{% endif %}" alt="{{ video.title }}" onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'">
+                                </div>
+                                <div class="video-info">
+                                    <div class="video-title">{{ video.title }}</div>
+                                    <div class="video-meta">
+                                        <span class="video-views">
+                                            <i class="fas fa-eye"></i>
+                                            {{ video.views_count }} views
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                            <p>No videos in this folder yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Auto-play Script -->
+                {% if videos %}
+                <script>
+                    // Auto-play first video from folder on page load
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const firstVideoCard = document.querySelector('.video-card[data-video-id]');
+                        if(firstVideoCard) {
+                            // Show notification that auto-play is starting
+                            const notification = document.createElement('div');
+                            notification.style.cssText = `
+                                position: fixed;
+                                top: 100px;
+                                right: 20px;
+                                background: rgba(33, 33, 33, 0.95);
+                                color: white;
+                                padding: 0.75rem 1.25rem;
+                                border-radius: 6px;
+                                border: 2px solid #ff0000;
+                                z-index: 1000;
+                                font-size: 0.9rem;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                                animation: slideInRight 0.3s ease-out;
+                            `;
+                            notification.textContent = '▶️ Opening first video: ' + firstVideoCard.querySelector('.video-title').textContent;
+                            document.body.appendChild(notification);
+                            
+                            // Auto-navigate to first video after 1.5 seconds
+                            setTimeout(() => {
+                                window.location.href = firstVideoCard.href;
+                            }, 1500);
+                        }
+                    });
+                </script>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+
+    <script>
+        let currentFolder = '{{ folder_name }}';
+
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        function openRenameModal(folderName) {
+            document.getElementById('currentFolderName').value = folderName;
+            document.getElementById('newFolderName').value = '';
+            document.getElementById('renameFolderModal').classList.add('active');
+            document.getElementById('newFolderName').focus();
+        }
+
+        function closeRenameModal() {
+            document.getElementById('renameFolderModal').classList.remove('active');
+        }
+
+        async function submitRenameFolder(event) {
+            event.preventDefault();
+            
+            const newName = document.getElementById('newFolderName').value.trim();
+            if(!newName) {
+                alert('Please enter a new folder name');
+                return;
+            }
+
+            if(newName === currentFolder) {
+                alert('New name is the same as current name');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('old_name', currentFolder);
+                formData.append('new_name', newName);
+
+                const response = await fetch('/api/rename_folder', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if(response.ok) {
+                    showNotification('✓ Folder renamed successfully!');
+                    closeRenameModal();
+                    setTimeout(() => {
+                        window.location.href = '/folder/' + encodeURIComponent(newName);
+                    }, 1000);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch(error) {
+                console.error('Error:', error);
+                alert('Error renaming folder: ' + error.message);
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: rgba(33, 33, 33, 0.95);
+                color: white;
+                padding: 0.75rem 1.25rem;
+                border-radius: 6px;
+                border: 2px solid #ff0000;
+                z-index: 1000;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2000);
+        }
+
+        async function deleteFolder(folderName) {
+            if (!confirm(`⚠️ Are you sure you want to delete "${folderName}" folder?\n\nAll videos in this folder will be removed from the database (files won't be deleted).`)) {
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('folder_name', folderName);
+
+                const response = await fetch('/api/delete_folder', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if(response.ok) {
+                    showNotification('✓ Folder deleted successfully!');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete folder'));
+                }
+            } catch(error) {
+                console.error('Error:', error);
+                alert('Error deleting folder: ' + error.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFolders();
+            setupSearch();
+        });
+
+        async function loadFolders() {
+            try {
+                const response = await fetch('/api/folders');
+                const data = await response.json();
+                const folders = data.folders;
+
+                const foldersList = document.getElementById('foldersList');
+                foldersList.innerHTML = folders.map(folder => `
+                    <a href="/folder/${folder.name}" class="sidebar-item ${folder.name === '{{ folder_name }}' ? 'active' : ''}">
+                        <i class="fas fa-folder"></i>
+                        <span>${folder.name}</span>
+                        <span style="margin-left: auto; color: var(--text-secondary); font-size: 0.85rem;">${folder.count}</span>
+                    </a>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading folders:', error);
+            }
+        }
+
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                const videos = document.querySelectorAll('.video-card');
+                videos.forEach(video => {
+                    const title = video.querySelector('.video-title').textContent.toLowerCase();
+                    if (title.includes(query)) {
+                        video.style.display = 'block';
+                    } else {
+                        video.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Subfolder and video management functions
+        function openCreateSubfolderModal() {
+            document.getElementById('createSubfolderModal').classList.add('active');
+            document.getElementById('subfolderName').focus();
+        }
+
+        function closeCreateSubfolderModal() {
+            document.getElementById('createSubfolderModal').classList.remove('active');
+        }
+
+        function openAddVideoModal() {
+            document.getElementById('addVideoModal').classList.add('active');
+            document.getElementById('videoUrl').focus();
+        }
+
+        function closeAddVideoModal() {
+            document.getElementById('addVideoModal').classList.remove('active');
+        }
+
+        async function submitCreateSubfolder(event) {
+            event.preventDefault();
+
+            const subfolderName = document.getElementById('subfolderName').value.trim();
+            if (!subfolderName) {
+                alert('Please enter a subfolder name');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('parent_path', '{{ folder_path }}');
+                formData.append('subfolder_name', subfolderName);
+
+                const response = await fetch('/api/create_subfolder', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification('✓ Subfolder created successfully!');
+                    closeCreateSubfolderModal();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    alert('Error: ' + (data.detail || 'Failed to create subfolder'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error creating subfolder: ' + error.message);
+            }
+        }
+
+        async function submitAddVideoToFolder(event) {
+            event.preventDefault();
+
+            const videoUrl = document.getElementById('videoUrl').value.trim();
+            if (!videoUrl) {
+                alert('Please enter a YouTube URL');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('url', videoUrl);
+                formData.append('folder_path', '{{ folder_path }}');
+
+                const response = await fetch('/add_video', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification('✓ Video added successfully! Processing in background...');
+                    closeAddVideoModal();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to add video'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error adding video: ' + error.message);
+            }
+        }
+    </script>
+
+    <!-- Create Subfolder Modal -->
+    <div class="modal" id="createSubfolderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Subfolder in {{ folder_name }}</h3>
+                <button class="modal-close" onclick="closeCreateSubfolderModal()">×</button>
+            </div>
+            <form onsubmit="submitCreateSubfolder(event)">
+                <div class="form-group">
+                    <label>Subfolder name:</label>
+                    <input type="text" id="subfolderName" placeholder="Enter subfolder name" required autofocus>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn-primary" style="flex: 1;">
+                        <i class="fas fa-check"></i> Create
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="closeCreateSubfolderModal()" style="flex: 1;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Video Modal -->
+    <div class="modal" id="addVideoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Video to {{ folder_name }}</h3>
+                <button class="modal-close" onclick="closeAddVideoModal()">×</button>
+            </div>
+            <form onsubmit="submitAddVideoToFolder(event)">
+                <div class="form-group">
+                    <label>YouTube URL:</label>
+                    <input type="url" id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." required>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn-primary" style="flex: 1;">
+                        <i class="fas fa-plus-circle"></i> Add Video
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="closeAddVideoModal()" style="flex: 1;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

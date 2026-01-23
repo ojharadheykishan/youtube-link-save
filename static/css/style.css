@@ -1,0 +1,168 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+header {
+    background-color: #ffffff;
+    text-align: center;
+    padding: 40px 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+header h1 {
+    margin: 0;
+    color: #007bff;
+    font-size: 2.5rem;
+}
+
+header p {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+main {
+    padding: 20px;
+}
+
+.video-grid, .folder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.video-card, .folder-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.video-card:hover, .folder-card:hover {
+    transform: translateY(-5px);
+}
+
+.video-card a, .folder-card a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.video-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.no-thumbnail {
+    width: 100%;
+    height: 150px;
+    background: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.video-card h3, .folder-card h3 {
+    margin: 0.5rem 0;
+    color: #495057;
+    font-size: 1.1rem;
+}
+
+.video-card p, .folder-card p {
+    margin: 0.5rem 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.video-player {
+    text-align: center;
+    padding: 20px;
+}
+
+iframe {
+    width: 100%;
+    max-width: 800px;
+    border-radius: 8px;
+    border: none;
+}
+
+.video-details {
+    background: white;
+    margin: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.video-details h2 {
+    color: #495057;
+}
+
+.video-details p {
+    margin: 10px 0;
+    color: #6c757d;
+}
+
+.add-video {
+    background: white;
+    margin: 20px 0;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.add-video h2 {
+    margin-top: 0;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #218838;
+}
+
+@media (max-width: 600px) {
+    .video-grid, .folder-grid {
+        grid-template-columns: 1fr;
+    }
+    header h1 {
+        font-size: 2rem;
+    }
+    video {
+        width: 100%;
+    }
+    .video-details {
+        margin: 10px;
+        padding: 15px;
+    }
+}

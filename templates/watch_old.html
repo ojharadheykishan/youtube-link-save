@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ video.title }} - VideoHub</title>
+    <link rel="stylesheet" href="/static/css/youtube.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .watch-container {
+            margin-left: 260px;
+            margin-top: 70px;
+            width: calc(100% - 260px);
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .video-player {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .video-player iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-details {
+            padding: 2rem;
+            background-color: var(--tertiary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .video-details h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .sidebar-recommendations {
+            position: fixed;
+            right: 0;
+            top: 70px;
+            width: 350px;
+            height: calc(100vh - 70px);
+            background-color: var(--secondary-color);
+            border-left: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: none;
+        }
+
+        .sidebar-recommendations.active {
+            display: block;
+        }
+
+        .recommended-video {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all var(--animation-fast);
+        }
+
+        .recommended-video:hover {
+            transform: translateX(8px);
+        }
+
+        .recommended-thumbnail {
+            width: 120px;
+            height: 67px;
+            border-radius: 6px;
+            background-color: #000;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .recommended-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .recommended-info h4 {
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .recommended-info p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 1024px) {
+            .watch-container {
+                margin-left: 0;
+                width: 100%;
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .sidebar-recommendations {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <a href="/" class="logo">
+            <i class="fas fa-play-circle"></i>
+            <span>VideoHub</span>
+        </a>
+        <div class="search-bar">
+            <input type="text" placeholder="Search videos...">
+        </div>
+        <div class="header-actions">
+            <button class="btn-icon" title="Home" onclick="window.location.href='/'">
+                <i class="fas fa-home"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Watch Content -->
+    <div class="watch-container">
+        <!-- Video Player -->
+        <div>
+            <div class="video-player" id="videoPlayerContainer">
+                <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column;">
+                    <!-- Video Controls -->
+                    <div style="background: rgba(0,0,0,0.7); padding: 0.75rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--border-color);">
+                        <select id="qualitySelect" onchange="changeQuality()" style="padding: 0.5rem; background: var(--tertiary-color); color: white; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                            <option value="720p">📺 720p (HD)</option>
+                            <option value="480p">📺 480p</option>
+                            <option value="360p">📺 360p</option>
+                            <option value="240p">📺 240p</option>
+                        </select>
+                        
+                        <select id="speedSelect" onchange="changeSpeed()" style="padding: 0.5rem; background: var(--tertiary-color); color: white; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                            <option value="0.25">⏱️ 0.25x</option>
+                            <option value="0.5">⏱️ 0.5x</option>
+                            <option value="0.75">⏱️ 0.75x</option>
+                            <option value="1" selected>⏱️ 1x (Normal)</option>
+                            <option value="1.25">⏱️ 1.25x</option>
+                            <option value="1.5">⏱️ 1.5x</option>
+                            <option value="1.75">⏱️ 1.75x</option>
+                            <option value="2">⏱️ 2x</option>
+                            <option value="3">⏱️ 3x</option>
+                            <option value="4">⚡ 4x (Max)</option>
+                        </select>
+                        
+                        <label style="color: white; font-size: 0.85rem; margin-left: auto; cursor: pointer;">
+                            <input type="checkbox" id="autoplayToggle" onchange="toggleAutoplay()" style="margin-right: 0.5rem; cursor: pointer;" checked>
+                            🔄 Auto-play
+                        </label>
+                    </div>
+                    
+                    <!-- YouTube Embed with Fixed Configuration -->
+                    <div style="position: relative; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center;">
+                        <iframe id="videoFrame" 
+                                src="https://www.youtube-nocookie.com/embed/{{ video.video_id }}?autoplay=1&controls=1&modestbranding=1&rel=0&fs=1&playsinline=1" 
+                                style="width: 100%; height: 100%; border: none;" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Details -->
+            <div class="video-details">
+                <h2>{{ video.title }}</h2>
+
+                <div class="detail-item">
+                    <div>
+                        <div class="detail-label"><i class="fas fa-eye"></i> Views</div>
+                        <div class="detail-value">{{ video.views_count }}</div>
+                    </div>
+                    <div>
+                        <div class="detail-label"><i class="fas fa-folder"></i> Folder</div>
+                        <div class="detail-value"><a href="/folder/{{ video.folder_name }}" style="color: var(--primary-color); text-decoration: none;">{{ video.folder_name }}</a></div>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <div style="flex: 1;">
+                        <div class="detail-label"><i class="fas fa-link"></i> Source</div>
+                        <a href="{{ video.source_url }}" target="_blank" style="color: var(--primary-color); text-decoration: none; font-size: 0.85rem; word-break: break-all;">Open on YouTube</a>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <div style="flex: 1;">
+                        <div class="detail-label"><i class="fas fa-plus"></i> Added</div>
+                        <div class="detail-value" style="font-size: 0.9rem;">
+                            {% set added_time = video.get('added_time', '') %}
+                            {% if added_time %}
+                                {{ added_time[:10] }}
+                            {% else %}
+                                Recently
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+                    <button class="btn-primary" style="flex: 1; min-width: 120px;" onclick="togglePlayerMode()">
+                        <i class="fas fa-exchange-alt"></i> <span id="playerModeBtn">Switch Player</span>
+                    </button>
+                    <button class="btn-secondary" style="flex: 1; min-width: 120px;" onclick="openYoutube()">
+                        <i class="fas fa-external-link-alt"></i> YouTube
+                    </button>
+                    <button class="btn-secondary" style="flex: 1; min-width: 120px;" onclick="playInVLC()">
+                        <i class="fas fa-play-circle"></i> VLC
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        let player = null;
+        let currentQuality = '720p';
+        let currentSpeed = 1;
+        let autoplayEnabled = true;
+        const videoSource = "{{ video.source_url }}";
+        const videoId = "{{ video.video_id }}";
+        let playerMode = 'nocookie'; // 'nocookie', 'standard', 'noembed'
+
+        // YouTube IFrame API is ready
+        function onYouTubeIframeAPIReady() {
+            initializePlayerControls();
+        }
+
+        function initializePlayerControls() {
+            showNotification('🎬 VideoHub Player Ready - Playing on Website');
+            setupSpeedListener();
+        }
+
+        function setupSpeedListener() {
+            const speedSelect = document.getElementById('speedSelect');
+            const qualitySelect = document.getElementById('qualitySelect');
+            
+            speedSelect.addEventListener('change', changeSpeed);
+            qualitySelect.addEventListener('change', changeQuality);
+        }
+
+        function togglePlayerMode() {
+            const iframe = document.getElementById('videoFrame');
+            const btn = document.getElementById('playerModeBtn');
+            
+            if(playerMode === 'nocookie') {
+                playerMode = 'standard';
+                iframe.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&controls=1&modestbranding=1&rel=0&fs=1&playsinline=1';
+                showNotification('🔄 Switched to Standard YouTube Player');
+                btn.textContent = 'Switch to NoEmbed';
+            } else if(playerMode === 'standard') {
+                playerMode = 'noembed';
+                iframe.src = 'https://noembed.com/embed?url=https://www.youtube.com/watch?v=' + videoId;
+                showNotification('🔄 Switched to NoEmbed Player');
+                btn.textContent = 'Switch to Privacy Mode';
+            } else {
+                playerMode = 'nocookie';
+                iframe.src = 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&controls=1&modestbranding=1&rel=0&fs=1&playsinline=1';
+                showNotification('🔄 Switched to Privacy Mode (No Cookie)');
+                btn.textContent = 'Switch Player';
+            }
+        }
+
+        function changeQuality() {
+            const select = document.getElementById('qualitySelect');
+            currentQuality = select.value;
+            showNotification('📺 Quality: ' + currentQuality);
+        }
+
+        function changeSpeed() {
+            const select = document.getElementById('speedSelect');
+            currentSpeed = parseFloat(select.value);
+            
+            if(currentSpeed === 4) {
+                showNotification('⚡ TURBO MODE: ' + currentSpeed + 'x');
+            } else if(currentSpeed >= 2) {
+                showNotification('🚀 Fast: ' + currentSpeed + 'x');
+            } else if(currentSpeed === 1) {
+                showNotification('⏱️ Normal: ' + currentSpeed + 'x');
+            } else {
+                showNotification('🐢 Slow: ' + currentSpeed + 'x');
+            }
+        }
+
+        function toggleAutoplay() {
+            const toggle = document.getElementById('autoplayToggle');
+            autoplayEnabled = toggle.checked;
+            showNotification(autoplayEnabled ? '✓ Auto-play ON' : '✗ Auto-play OFF');
+        }
+
+        function playInVLC() {
+            const vlcUrl = 'vlc://' + encodeURIComponent(videoSource);
+            showNotification('🎬 Opening in VLC...');
+            setTimeout(() => {
+                window.location.href = vlcUrl;
+            }, 500);
+        }
+
+        function openYoutube() {
+            showNotification('🌐 Opening on YouTube...');
+            setTimeout(() => {
+                window.open(videoSource, '_blank');
+            }, 300);
+        }
+
+        function showNotification(message) {
+            const existing = document.querySelector('[data-notification]');
+            if(existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.setAttribute('data-notification', 'true');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: rgba(33, 33, 33, 0.95);
+                color: white;
+                padding: 0.75rem 1.25rem;
+                border-radius: 6px;
+                border: 2px solid #ff0000;
+                z-index: 1000;
+                font-size: 0.9rem;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                animation: slideInRight 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎬 VideoHub Watch Player');
+            console.log('📺 Title: {{ video.title }}');
+            console.log('🎯 Player Modes: NoEmbed, Standard YouTube, Privacy Mode');
+            console.log('⏱️ Speed: 0.25x to 4x | Quality: 720p to 240p');
+            initializePlayerControls();
+            showNotification('🎬 Ready: {{ video.title }}');
+        });
+
+        window.addEventListener('message', (event) => {
+            if(event.data && event.data.event === 'infoDelivery') {
+                // Player info received
+            }
+        });
+    </script>
+
+    <style>
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+            }
+        }
+    </style>
+</body>
+</html>

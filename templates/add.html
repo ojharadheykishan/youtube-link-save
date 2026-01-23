@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Video - YouTube Link Save</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='youtube.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <!-- YouTube-style Header -->
+    <header class="youtube-header">
+        <div class="header-left">
+            <div class="menu-btn">☰</div>
+            <div class="logo">
+                <span class="logo-text">📺 YouTube Link Save</span>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="search-container">
+                <input type="text" placeholder="Search videos..." class="search-input" disabled>
+                <button class="search-btn" disabled>🔍</button>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="/" class="back-btn">← Back to Home</a>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <ul>
+            <li><a href="/">🏠 Home</a></li>
+            <li class="active"><a href="/add">➕ Add Video</a></li>
+            <li><a href="#folders">📁 Folders</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="content-header">
+            <h2>Add New Video</h2>
+        </div>
+        <form action="/add" method="post" class="add-video-form">
+            <div class="form-group">
+                <label for="title">Video Title</label>
+                <input type="text" id="title" name="title" placeholder="Enter video title" required>
+            </div>
+            <div class="form-group">
+                <label for="url">YouTube URL</label>
+                <input type="url" id="url" name="url" placeholder="https://www.youtube.com/watch?v=..." required>
+            </div>
+            <div class="form-group">
+                <label for="folder_select">Select Folder</label>
+                <select id="folder_select" name="folder">
+                    <option value="">Choose existing folder...</option>
+                    {% for folder in folders %}
+                    <option value="{{ folder }}">{{ folder }}</option>
+                    {% endfor %}
+                    <option value="">+ Create New Folder</option>
+                </select>
+                <input type="text" id="new_folder" name="new_folder" placeholder="Enter new folder name" style="display:none;">
+            </div>
+            <button type="submit" class="submit-btn">Add Video</button>
+        </form>
+    </main>
+    <script>
+        document.getElementById('folder_select').addEventListener('change', function() {
+            var newFolderInput = document.getElementById('new_folder');
+            if (this.value === '') {
+                newFolderInput.style.display = 'block';
+                newFolderInput.required = true;
+                newFolderInput.focus();
+            } else {
+                newFolderInput.style.display = 'none';
+                newFolderInput.required = false;
+            }
+        });
+
+        // Menu toggle
+        document.querySelector('.menu-btn').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        });
+    </script>
+    <script src="{{ url_for('static', filename='animations.js') }}"></script>
+</body>
+</html>

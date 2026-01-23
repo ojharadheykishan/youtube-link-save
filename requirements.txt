@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+yt-dlp
+aiofiles
+jinja2
+python-multipart
+bcrypt
+python-jose[cryptography]
+pyrogram
