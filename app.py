@@ -225,6 +225,25 @@ async def add_playlist(playlist_url, folder_name, username, monitor=False):
 
     db = load_db()
     playlist_db = load_playlist_db()
+    folder_db = load_folder_db()
+
+    # Create folder if it doesn't exist
+    if folder_name and folder_name not in folder_db:
+        folder_db[folder_name] = {
+            'name': folder_name,
+            'path': folder_name,
+            'parent_path': '',
+            'user_id': username,
+            'created_time': datetime.now().isoformat()
+        }
+        save_folder_db(folder_db)
+
+    # Fix existing playlist videos with username field
+    for video_id, video in db.items():
+        if 'username' in video and 'user_id' not in video:
+            video['user_id'] = video['username']
+            del video['username']
+    save_db(db)
 
     added_count = 0
     playlist_id = videos[0]['playlist_id'] if videos else None
@@ -257,13 +276,14 @@ async def add_playlist(playlist_url, folder_name, username, monitor=False):
                 'url': video['url'],
                 'local_path': None,  # Will be downloaded later if needed
                 'folder_name': folder_name,
+                'folder_path': folder_name,
                 'duration': video['duration'],
                 'uploader': video['uploader'],
                 'added_time': datetime.now().isoformat(),
                 'views_count': 0,
                 'source_type': 'youtube_playlist',
                 'playlist_id': playlist_id,
-                'username': username
+                'user_id': username
             }
             added_count += 1
 
