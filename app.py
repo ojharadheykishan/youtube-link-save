@@ -90,9 +90,15 @@ async def register(
             "error": e.detail
         })
 
+@app.get("/logout")
+async def logout_get(response: Response):
+    response = RedirectResponse("/start", status_code=303)
+    response.delete_cookie("auth_token")
+    return response
+
 @app.post("/logout")
-async def logout(response: Response):
-    response = RedirectResponse("/start", status_code=302)
+async def logout_post(response: Response):
+    response = RedirectResponse("/start", status_code=303)
     response.delete_cookie("auth_token")
     return response
 
