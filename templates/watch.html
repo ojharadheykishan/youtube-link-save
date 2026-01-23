@@ -849,5 +849,64 @@
         });
     </script>
     <script src="/static/js/custom-player.js"></script>
+    <script src="/static/js/popup.js"></script>
+    <!-- Animated Badge Start -->
+    <div id="rk-badge">
+        <img src="https://cdn.pixabay.com/photo/2017/01/31/13/14/avatar-2026510_1280.png" alt="Cartoon Boy" class="rk-boy">
+        <span class="rk-text">made by radhey kishan ojha</span>
+        <span class="rk-flag">🇮🇳</span>
+    </div>
+    <style>
+        #rk-badge {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            background: rgba(20,20,20,0.85);
+            border-radius: 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+            padding: 6px 18px 6px 8px;
+            font-size: 1rem;
+            animation: rk-bounce 2.5s infinite;
+            border: 1.5px solid #ff0000;
+        }
+        .rk-boy {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: rk-wave 2s infinite alternate;
+        }
+        .rk-text {
+            color: #fff;
+            font-weight: 600;
+            margin-right: 10px;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 4px #000;
+        }
+        .rk-flag {
+            font-size: 1.3em;
+            animation: rk-flagwave 1.2s infinite alternate;
+        }
+        @keyframes rk-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-7px); }
+        }
+        @keyframes rk-wave {
+            0% { transform: rotate(-8deg); }
+            100% { transform: rotate(8deg); }
+        }
+        @keyframes rk-flagwave {
+            0% { transform: rotate(-10deg) scale(1.1); }
+            100% { transform: rotate(10deg) scale(1.2); }
+        }
+        @media (max-width: 600px) {
+            #rk-badge { font-size: 0.85rem; padding: 4px 10px 4px 4px; }
+            .rk-boy { width: 22px; height: 22px; }
+        }
+    </style>
+    <!-- Animated Badge End -->
 </body>
 </html>

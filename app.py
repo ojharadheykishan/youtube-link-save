@@ -18,6 +18,10 @@ try:
 except ImportError:
     TELEGRAM_AVAILABLE = False
 
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
