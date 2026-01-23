@@ -7,3 +7,5 @@ python-multipart
 bcrypt
 python-jose[cryptography]
 pyrogram
+httpx
+pyotp

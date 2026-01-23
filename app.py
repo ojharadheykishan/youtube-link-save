@@ -92,9 +92,48 @@ async def register(
 
 @app.post("/logout")
 async def logout(response: Response):
-    response = RedirectResponse("/login", status_code=302)
+    response = RedirectResponse("/start", status_code=302)
     response.delete_cookie("auth_token")
     return response
+
+@app.get("/start", response_class=HTMLResponse)
+async def start_page(request: Request):
+    return templates.TemplateResponse("start.html", {"request": request})
+
+# Features route
+@app.get("/features", response_class=HTMLResponse)
+async def features_page(request: Request):
+    from features import FeatureImplementation
+    features_manager = FeatureImplementation()
+    categories = features_manager.features.get_feature_categories()
+    
+    return templates.TemplateResponse("features.html", {
+        "request": request,
+        "categories": categories
+    })
+
+# API route to get feature status
+@app.get("/api/features/status")
+async def get_feature_status(feature: str = None):
+    from features import VideoHubFeatures
+    features = VideoHubFeatures()
+    
+    if feature:
+        return {"feature": feature, "status": features.get_feature_status(feature)}
+    else:
+        return {"features": features.get_all_features()}
+
+# API route to implement all features
+@app.post("/api/features/implement-all")
+async def implement_all_features():
+    from features import FeatureImplementation
+    features_manager = FeatureImplementation()
+    
+    try:
+        features_manager.implement_all_features()
+        return {"success": True, "message": "All features implemented successfully"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 def load_db():
     try:
@@ -424,7 +463,7 @@ def build_user_folder_hierarchy(username):
 async def home(request: Request, auth_token: str = Cookie(None)):
     # Check if user is authenticated
     if not auth_token:
-        return RedirectResponse("/login", status_code=302)
+        return RedirectResponse("/start", status_code=302)
 
     try:
         from auth import verify_token
@@ -454,6 +493,27 @@ async def home(request: Request, auth_token: str = Cookie(None)):
         "request": request,
         "folder_hierarchy": folder_hierarchy,
         "videos": user_videos,
+        "current_user": user
+    })
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(request: Request, auth_token: str = Cookie(None)):
+    """Advanced dashboard with all 50 features"""
+    if not auth_token:
+        return RedirectResponse("/login", status_code=302)
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        if username not in users:
+            return RedirectResponse("/login", status_code=302)
+        user = users[username]
+    except Exception:
+        return RedirectResponse("/login", status_code=302)
+
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
         "current_user": user
     })
 
@@ -600,8 +660,11 @@ async def get_folders(auth_token: str = Cookie(None)):
 
 @app.get("/api/stream/{video_id}")
 async def get_stream(video_id: str, auth_token: str = Cookie(None)):
-    """Get streaming URL for a video"""
+    """Get streaming URL for a video with better error handling and debugging"""
+    print(f"\n📺 Stream API called for video_id: {video_id}")
+    
     if not auth_token:
+        print("❌ No auth token provided")
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
@@ -609,82 +672,246 @@ async def get_stream(video_id: str, auth_token: str = Cookie(None)):
         username = verify_token(auth_token)
         users = load_users()
         if username not in users:
+            print(f"❌ User {username} not found in users database")
             raise HTTPException(status_code=401, detail="User not found")
-    except Exception:
+        print(f"✅ Authenticated as: {username}")
+    except Exception as e:
+        print(f"❌ Authentication error: {e}")
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+    db = load_db()
+    print(f"📊 Total videos in database: {len(db)}")
+    
+    video = db.get(video_id)
+    if not video:
+        print(f"❌ Video {video_id} not found in database")
+        print(f"Available video IDs: {list(db.keys())[:5]}...")  # Show first 5
+        raise HTTPException(status_code=404, detail=f"Video {video_id} not found")
+
+    print(f"✅ Video found: {video.get('title', 'Unknown')}")
+    print(f"   Owner: {video.get('user_id')}, Current user: {username}")
+
+    # Check if video belongs to user
+    if video.get('user_id') != username:
+        print(f"❌ Access denied: Video belongs to {video.get('user_id')}, not {username}")
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    print(f"✅ Access granted")
+    
+    try:
+        # Extract stream URL using yt-dlp
+        url = video.get('source_url') or video.get('url')
+        if not url:
+            print(f"❌ No source URL found in video record")
+            raise HTTPException(status_code=400, detail="Video has no source URL")
+            
+        print(f"🔗 Source URL: {url}")
+        
+        # Try multiple format options
+        format_options = [
+            ('18', 'MP4 360p (Best Compatibility)'),
+            ('best[ext=mp4]', 'Best MP4'),
+            ('best', 'Best Available'),
+            ('22', 'MP4 720p'),
+        ]
+        
+        stream_url = None
+        selected_format_desc = None
+        
+        for fmt, fmt_desc in format_options:
+            print(f"🔄 Trying format {fmt}...")
+            ydl_opts = {
+                'format': fmt,
+                'quiet': True,
+                'no_warnings': True,
+                'socket_timeout': 25,
+                'http_headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+            }
+            
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(url, download=False)
+                    stream_url = info.get('url')
+                    
+                    if stream_url:
+                        selected_format_desc = fmt_desc
+                        print(f"✅ Got stream URL using {fmt_desc}")
+                        return {
+                            "stream_url": stream_url,
+                            "title": info.get('title', video.get('title')),
+                            "duration": info.get('duration', 0),
+                            "format": fmt_desc,
+                            "source": "yt_dlp"
+                        }
+            except Exception as e:
+                err_msg = str(e)[:80]
+                print(f"  ⚠️ Format {fmt} failed: {err_msg}")
+                continue
+        
+        # If we still don't have URL, log error and return fallback info
+        print(f"❌ Could not extract direct stream for {video_id}")
+        return {
+            "stream_url": None,
+            "error": "Could not extract direct stream - try YouTube embed",
+            "title": video.get('title'),
+            "video_id": video_id,
+            "fallback": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error extracting stream: {type(e).__name__}: {str(e)[:200]}")
+        import traceback
+        traceback.print_exc()
+        
+        return {
+            "stream_url": None,
+            "error": f"Stream extraction failed: {str(e)[:100]}",
+            "title": video.get('title'),
+            "video_id": video_id,
+            "fallback": True
+        }
+
+
+@app.get("/api/proxy_stream/{video_id}")
+async def proxy_stream(video_id: str, auth_token: str = Cookie(None)):
+    """Proxy endpoint that streams video directly through server"""
+    import httpx
+    
+    print(f"\n📹 Proxy stream requested for: {video_id}")
+    
+    if not auth_token:
+        print("❌ No auth token")
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        if username not in users:
+            print(f"❌ User {username} not found")
+            raise HTTPException(status_code=401, detail="User not found")
+    except Exception as e:
+        print(f"❌ Auth error: {e}")
         raise HTTPException(status_code=401, detail="Invalid authentication")
 
     db = load_db()
     video = db.get(video_id)
     if not video:
+        print(f"❌ Video {video_id} not found")
         raise HTTPException(status_code=404, detail="Video not found")
 
-    # Check if video belongs to user
     if video.get('user_id') != username:
+        print(f"❌ Access denied")
         raise HTTPException(status_code=403, detail="Access denied")
-    
+
     try:
-        # Extract stream URL using yt-dlp
-        url = video['source_url']
+        url = video.get('source_url') or video.get('url')
+        if not url:
+            print(f"❌ No source URL")
+            raise HTTPException(status_code=400, detail="No source URL")
+
+        print(f"🔗 Getting stream from: {url}")
         
-        # Try to get direct MP4/WebM URL
-        ydl_opts = {
-            'format': '18',  # 18 is MP4 format on YouTube
-            'quiet': True,
-            'no_warnings': True,
-            'socket_timeout': 30,
-        }
+        # Try multiple format options with fallback
+        format_options = [
+            ('18', 'MP4 360p (Standard)'),
+            ('best[ext=mp4]', 'Best MP4'),
+            ('best', 'Best Available'),
+            ('22', 'MP4 720p'),
+            ('43', 'WebM 360p'),
+        ]
         
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=False)
-                stream_url = info.get('url')
-                
-                if stream_url:
-                    return {
-                        "stream_url": stream_url,
-                        "title": info.get('title', video.get('title')),
-                        "duration": info.get('duration', 0),
-                        "format": "mp4"
-                    }
-        except:
-            pass
+        stream_url = None
+        selected_format = None
         
-        # Fallback - try best format
-        ydl_opts2 = {
-            'format': 'best',
-            'quiet': True,
-            'no_warnings': True,
-        }
-        
-        with yt_dlp.YoutubeDL(ydl_opts2) as ydl:
-            info = ydl.extract_info(url, download=False)
-            stream_url = info.get('url')
-            
-            if stream_url:
-                return {
-                    "stream_url": stream_url,
-                    "title": info.get('title', video.get('title')),
-                    "duration": info.get('duration', 0),
-                    "format": "unknown"
+        for fmt, fmt_desc in format_options:
+            print(f"🔄 Trying format {fmt} ({fmt_desc})...")
+            ydl_opts = {
+                'format': fmt,
+                'quiet': True,
+                'no_warnings': True,
+                'socket_timeout': 25,
+                'http_headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                 }
+            }
+            
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(url, download=False)
+                    stream_url = info.get('url')
+                    if stream_url:
+                        selected_format = fmt_desc
+                        print(f"✅ Success with {fmt_desc}")
+                        break
+            except Exception as e:
+                err_msg = str(e)[:50]
+                print(f"  ⚠️ Format {fmt} failed: {err_msg}")
+                continue
         
-        # If we still don't have URL, use fallback embed
-        return {
-            "stream_url": None,
-            "fallback_embed": f"https://www.youtube.com/embed/{video_id}?autoplay=1&controls=1&rel=0",
-            "error": "Could not extract direct stream",
-            "title": video.get('title')
-        }
+        if not stream_url:
+            print(f"❌ Could not extract stream URL with any format")
+            # Return a helpful error response
+            return {
+                "error": "Could not extract playable stream",
+                "suggestion": "The video may be restricted or unavailable",
+                "video_id": video_id
+            }
+
+        print(f"✅ Stream URL extracted using {selected_format}, proxying...")
         
+        # Proxy the stream with proper headers
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            try:
+                async with client.stream('GET', stream_url, headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }) as response:
+                    if response.status_code not in [200, 206]:
+                        print(f"❌ Stream returned: {response.status_code}")
+                        raise HTTPException(status_code=response.status_code, detail=f"Stream error: {response.status_code}")
+                    
+                    # Get content type and length
+                    content_type = response.headers.get('content-type', 'video/mp4')
+                    content_length = response.headers.get('content-length', 'unknown')
+                    
+                    print(f"✅ Proxying stream - Type: {content_type}, Size: {content_length}")
+                    
+                    # Stream the video
+                    async def generate():
+                        try:
+                            async for chunk in response.aiter_bytes(chunk_size=16384):
+                                if chunk:
+                                    yield chunk
+                        except Exception as e:
+                            print(f"❌ Error streaming chunk: {e}")
+                    
+                    return Response(
+                        content=generate(),
+                        media_type=content_type,
+                        headers={
+                            'Accept-Ranges': 'bytes',
+                            'Cache-Control': 'public, max-age=3600',
+                            'Content-Type': content_type,
+                        }
+                    )
+            except httpx.TimeoutException:
+                print("❌ Stream connection timeout")
+                raise HTTPException(status_code=504, detail="Stream timeout - video took too long to load")
+            except Exception as e:
+                print(f"❌ Stream error: {type(e).__name__}: {str(e)[:100]}")
+                raise HTTPException(status_code=500, detail=f"Stream failed: {str(e)[:50]}")
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"Error extracting stream: {e}")
-        # Return fallback with embed URL
-        return {
-            "stream_url": None,
-            "fallback_embed": f"https://www.youtube.com/embed/{video_id}?autoplay=1&controls=1&rel=0",
-            "error": str(e),
-            "title": video.get('title')
-        }
+        print(f"❌ Proxy error: {type(e).__name__}: {str(e)[:200]}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)[:80]}")
 
 
 @app.post("/api/rename_folder")
@@ -1370,6 +1597,415 @@ async def playlist_monitor_task():
             print(f"Error in playlist monitoring: {e}")
         # Check every 6 hours
         await asyncio.sleep(6 * 60 * 60)
+
+# ==================== API ENDPOINTS FOR ALL 50 FEATURES ====================
+
+# TAGGING FEATURES
+@app.post("/api/tags/add")
+async def api_add_tags(video_id: str = Form(...), tags: str = Form(...), auth_token: str = Cookie(None)):
+    """Add tags to video"""
+    from features import add_tag
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    
+    tag_list = [t.strip() for t in tags.split(',') if t.strip()]
+    return add_tag(video_id, tag_list, username)
+
+@app.get("/api/tags/{video_id}")
+async def api_get_tags(video_id: str, auth_token: str = Cookie(None)):
+    """Get tags for video"""
+    from features import get_tags
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return {'tags': get_tags(video_id, username)}
+
+@app.get("/api/tags/all")
+async def api_all_tags(auth_token: str = Cookie(None)):
+    """Get all tags for user"""
+    from features import get_all_tags
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    tags = get_all_tags(username)
+    return {'tags': dict(tags)}
+
+# FAVORITE FEATURES
+@app.post("/api/favorites/toggle")
+async def api_toggle_favorite(video_id: str = Form(...), auth_token: str = Cookie(None)):
+    """Toggle favorite status"""
+    from features import toggle_favorite
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return toggle_favorite(video_id, username)
+
+@app.get("/api/favorites")
+async def api_get_favorites(auth_token: str = Cookie(None)):
+    """Get favorite videos"""
+    from features import get_favorites
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return {'favorites': get_favorites(username)}
+
+@app.get("/api/favorites/check/{video_id}")
+async def api_check_favorite(video_id: str, auth_token: str = Cookie(None)):
+    """Check if video is favorited"""
+    from features import is_favorite
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return {'is_favorite': is_favorite(video_id, username)}
+
+# WATCH HISTORY
+@app.post("/api/history/add")
+async def api_add_history(video_id: str = Form(...), auth_token: str = Cookie(None)):
+    """Add to watch history"""
+    from features import add_to_watch_history
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return add_to_watch_history(video_id, username)
+
+@app.get("/api/history")
+async def api_get_history(limit: int = 20, auth_token: str = Cookie(None)):
+    """Get watch history"""
+    from features import get_watch_history
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return {'history': get_watch_history(username, limit)}
+
+# BATCH OPERATIONS
+@app.post("/api/batch/move")
+async def api_batch_move(video_ids: str = Form(...), folder: str = Form(...), auth_token: str = Cookie(None)):
+    """Batch move videos"""
+    from features import batch_move_videos
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    ids = [v.strip() for v in video_ids.split(',')]
+    return batch_move_videos(ids, folder, username)
+
+@app.post("/api/batch/delete")
+async def api_batch_delete(video_ids: str = Form(...), auth_token: str = Cookie(None)):
+    """Batch delete videos"""
+    from features import batch_delete_videos
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    ids = [v.strip() for v in video_ids.split(',')]
+    return batch_delete_videos(ids, username)
+
+@app.post("/api/batch/tags")
+async def api_batch_tags(video_ids: str = Form(...), tags: str = Form(...), auth_token: str = Cookie(None)):
+    """Batch add tags"""
+    from features import batch_add_tags
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    ids = [v.strip() for v in video_ids.split(',')]
+    tag_list = [t.strip() for t in tags.split(',')]
+    return batch_add_tags(ids, tag_list, username)
+
+# AUTO ORGANIZE
+@app.post("/api/organize/by-date")
+async def api_organize_by_date(auth_token: str = Cookie(None)):
+    """Auto organize by date"""
+    from features import auto_organize_by_date
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return auto_organize_by_date(username)
+
+# SEARCH FEATURES
+@app.get("/api/search/advanced")
+async def api_advanced_search(query: str = "", folder: str = "", auth_token: str = Cookie(None)):
+    """Advanced search"""
+    from features import advanced_search
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    
+    filters = {}
+    if folder:
+        filters['folder'] = folder
+    
+    results = advanced_search(username, query, filters)
+    return {'results': results, 'count': len(results)}
+
+# COMMENTS
+@app.post("/api/comments/add")
+async def api_add_comment(video_id: str = Form(...), comment: str = Form(...), auth_token: str = Cookie(None)):
+    """Add comment"""
+    from features import add_comment
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return add_comment(video_id, username, comment)
+
+@app.get("/api/comments/{video_id}")
+async def api_get_comments(video_id: str):
+    """Get comments"""
+    from features import get_comments
+    return {'comments': get_comments(video_id)}
+
+# RATINGS
+@app.post("/api/ratings/add")
+async def api_rate_video(video_id: str = Form(...), rating: int = Form(...), auth_token: str = Cookie(None)):
+    """Rate video"""
+    from features import rate_video
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return rate_video(video_id, username, rating)
+
+@app.get("/api/ratings/{video_id}")
+async def api_get_rating(video_id: str):
+    """Get video rating"""
+    from features import get_average_rating
+    return {'average_rating': get_average_rating(video_id)}
+
+# SHARING
+@app.post("/api/share/create")
+async def api_create_share(video_id: str = Form(...), auth_token: str = Cookie(None)):
+    """Create share link"""
+    from features import create_share_link
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return create_share_link(video_id, username)
+
+@app.get("/api/share/{share_code}")
+async def api_get_share(share_code: str):
+    """Get shared video"""
+    from features import get_shared_video
+    video = get_shared_video(share_code)
+    if not video:
+        raise HTTPException(status_code=404, detail="Share not found")
+    return video
+
+# ANALYTICS
+@app.get("/api/dashboard")
+async def api_dashboard(auth_token: str = Cookie(None)):
+    """Get user dashboard"""
+    from features import get_user_dashboard
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return get_user_dashboard(username)
+
+@app.get("/api/storage")
+async def api_storage(auth_token: str = Cookie(None)):
+    """Get storage info"""
+    from features import get_storage_info
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return get_storage_info(username)
+
+@app.post("/api/storage/cleanup")
+async def api_cleanup_storage(days: int = 90, auth_token: str = Cookie(None)):
+    """Cleanup old videos"""
+    from features import cleanup_storage
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return cleanup_storage(username, days)
+
+@app.get("/api/stats/{video_id}")
+async def api_video_stats(video_id: str):
+    """Get video stats"""
+    from features import get_video_stats, increment_view_count
+    increment_view_count(video_id)
+    return get_video_stats(video_id)
+
+# SECURITY
+@app.post("/api/folder/password")
+async def api_set_folder_password(folder: str = Form(...), password: str = Form(...), auth_token: str = Cookie(None)):
+    """Set folder password"""
+    from features import set_folder_password
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return set_folder_password(folder, password, username)
+
+@app.post("/api/2fa/enable")
+async def api_enable_2fa(auth_token: str = Cookie(None)):
+    """Enable 2FA"""
+    from features import enable_2fa
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return enable_2fa(username)
+
+@app.post("/api/2fa/verify")
+async def api_verify_2fa(token: str = Form(...), auth_token: str = Cookie(None)):
+    """Verify 2FA token"""
+    from features import verify_2fa_token
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return {'verified': verify_2fa_token(username, token)}
+
+# EXPORT
+@app.get("/api/export/data")
+async def api_export_data(auth_token: str = Cookie(None)):
+    """Export all user data"""
+    from features import export_user_data
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    return export_user_data(username)
+
+# DASHBOARD ENDPOINT
+@app.get("/api/dashboard")
+async def api_dashboard(auth_token: str = Cookie(None)):
+    """Get comprehensive dashboard data"""
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    
+    from features import (
+        get_user_dashboard, get_all_tags, get_favorites,
+        get_watch_history, get_storage_info, get_recent_activity
+    )
+    
+    try:
+        dashboard = get_user_dashboard(username)
+        all_tags = get_all_tags(username)
+        favorites = get_favorites(username)
+        history = get_watch_history(username, 5)
+        storage = get_storage_info(username)
+        activity = get_recent_activity(username, 10)
+        
+        return {
+            'total_videos': dashboard.get('total_videos', 0),
+            'total_favorites': dashboard.get('total_favorites', 0),
+            'total_tags': len(all_tags),
+            'top_tags': list(dict(sorted(all_tags.items(), key=lambda x: x[1], reverse=True)[:10]).keys()),
+            'storage_info': storage,
+            'recent_videos': favorites[:5],
+            'watch_history': history,
+            'recent_activity': activity,
+            'stats': {
+                'videos_watched': len(history),
+                'favorites_count': len(favorites),
+                'tags_count': len(all_tags)
+            }
+        }
+    except Exception as e:
+        print(f"Dashboard error: {e}")
+        return {
+            'total_videos': 0,
+            'total_favorites': 0,
+            'total_tags': 0,
+            'top_tags': [],
+            'storage_info': {'total_size_gb': 0, 'used_size_gb': 0},
+            'recent_videos': [],
+            'watch_history': [],
+            'recent_activity': [],
+            'stats': {'videos_watched': 0, 'favorites_count': 0, 'tags_count': 0}
+        }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))

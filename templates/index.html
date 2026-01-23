@@ -455,6 +455,9 @@
                 <i class="fas fa-cog"></i>
             </button>
             {% endif %}
+            <button class="btn-icon" title="Dashboard (50+ Features)" onclick="window.location.href='/dashboard'" style="background: rgba(103, 58, 183, 0.2); color: #7c3aed;">
+                <i class="fas fa-chart-line"></i>
+            </button>
             <span style="color: var(--text-primary); margin-right: 1rem;">
                 Welcome, <strong>{{ current_user.username }}</strong>
             </span>
@@ -482,6 +485,10 @@
                 <a href="/" class="sidebar-item active">
                     <i class="fas fa-home"></i>
                     <span>Home</span>
+                </a>
+                <a href="/features" class="sidebar-item">
+                    <i class="fas fa-cubes"></i>
+                    <span>Features</span>
                 </a>
             </div>
 

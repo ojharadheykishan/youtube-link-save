@@ -15,34 +15,40 @@
             grid-template-columns: 1fr 350px;
             gap: 2rem;
             padding: 2rem;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #1a1a1a 100%);
         }
 
         .video-info-box {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
+            background: rgba(33, 33, 33, 0.8);
+            border: 1px solid rgba(255, 0, 0, 0.1);
+            border-radius: 12px;
             padding: 2rem;
             margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .video-title {
             font-size: 1.8rem;
-            font-weight: bold;
+            font-weight: 700;
             margin-bottom: 1.5rem;
             color: var(--text-primary);
+            line-height: 1.3;
         }
 
         .play-instruction {
-            background: rgba(255, 0, 0, 0.1);
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.15), rgba(255, 0, 0, 0.05));
             border-left: 4px solid #ff0000;
             padding: 1rem;
-            border-radius: 4px;
+            border-radius: 8px;
             margin-bottom: 2rem;
             color: var(--text-secondary);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 0, 0, 0.2);
         }
 
         .play-instruction strong {
-            color: #ff0000;
+            color: #ff6b6b;
         }
 
         .button-group {
@@ -56,7 +62,7 @@
             flex: 1;
             padding: 1rem;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 1rem;
             font-weight: 600;
@@ -69,32 +75,36 @@
         }
 
         .btn-youtube {
-            background: #ff0000;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
             color: white;
+            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2);
         }
 
         .btn-youtube:hover {
-            background: #cc0000;
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+            background: linear-gradient(135deg, #ff3333, #bb0000);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(255, 0, 0, 0.4);
         }
 
         .btn-vlc {
-            background: #ff9900;
+            background: linear-gradient(135deg, #ff9900, #ff7700);
             color: white;
+            box-shadow: 0 4px 12px rgba(255, 153, 0, 0.2);
         }
 
         .btn-vlc:hover {
-            background: #ff7700;
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
+            background: linear-gradient(135deg, #ffb333, #ff5500);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(255, 153, 0, 0.4);
         }
 
         .video-details {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
+            background: rgba(33, 33, 33, 0.8);
+            border: 1px solid rgba(255, 0, 0, 0.1);
+            border-radius: 12px;
             padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .video-details h3 {
@@ -104,6 +114,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-weight: 600;
         }
 
         .detail-item {
@@ -111,7 +122,7 @@
             justify-content: space-between;
             margin-bottom: 1rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(255, 0, 0, 0.1);
         }
 
         .detail-item:last-child {
@@ -131,12 +142,13 @@
         }
 
         .detail-value a {
-            color: #ff0000;
+            color: #ff6b6b;
             text-decoration: none;
+            transition: color 0.3s;
         }
 
         .detail-value a:hover {
-            text-decoration: underline;
+            color: #ff0000;
         }
 
         @media (max-width: 1024px) {
@@ -185,20 +197,44 @@
             </div>
 
             <!-- Video Player -->
-            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 2rem; aspect-ratio: 16/9;">
-                <!-- YouTube Embed Player -->
-                <div id="youtubeEmbed" style="width: 100%; height: 100%; display: none;">
-                    <iframe id="ytplayer" width="100%" height="100%" 
-                            src="https://www.youtube.com/embed/{{ video.original_video_id or video.video_id }}?enablejsapi=1&modestbranding=1&rel=0"
-                            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen style="width: 100%; height: 100%; border: none;"></iframe>
+            <div style="background: rgba(33, 33, 33, 0.8); border: 1px solid rgba(255, 0, 0, 0.1); border-radius: 12px; overflow: hidden; margin-bottom: 2rem; aspect-ratio: 16/9; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px);">
+                <!-- YouTube Embed Player Container -->
+                <div id="youtubeEmbed" style="width: 100%; height: 100%; display: none; position: relative;">
+                    <div id="ytPlayerContainer" style="width: 100%; height: 100%;"></div>
+                    <div id="ytErrorMessage" style="width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(255,0,0,0.15), rgba(255,0,0,0.05)); cursor: pointer; backdrop-filter: blur(5px);" onclick="useCustomPlayer()">
+                        <div style="text-align: center; color: var(--text-secondary);">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ffb333; margin-bottom: 1rem;"></i>
+                            <p style="font-size: 1.1rem; font-weight: 600; margin: 0 0 0.5rem 0;">YouTube Embed Not Available</p>
+                            <p style="font-size: 0.9rem; margin: 0;">Click here to use Custom Player</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Custom HTML5 Player -->
-                <video id="html5Player" controls style="width: 100%; height: 100%; display: none;" poster="{% if 'thumbnails' in (video.thumbnail_path or '') %}{{ '/' + video.thumbnail_path }}{% else %}https://img.youtube.com/vi/{{ (video.original_video_id or video.video_id).split('_')[0] }}/maxresdefault.jpg{% endif %}">
-                    <source id="videoSource" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
+                <div id="html5PlayerContainer" style="width: 100%; height: 100%; display: none; position: relative;">
+                    <video id="html5Player" controls crossorigin="anonymous" style="width: 100%; height: 100%; display: block;" poster="{% if 'thumbnails' in (video.thumbnail_path or '') %}{{ '/' + video.thumbnail_path }}{% else %}https://img.youtube.com/vi/{{ (video.original_video_id or video.video_id).split('_')[0] }}/maxresdefault.jpg{% endif %}">
+                        <source id="videoSource" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div id="videoErrorOverlay" style="width: 100%; height: 100%; display: none; position: absolute; top: 0; left: 0; background: linear-gradient(135deg, rgba(255,0,0,0.25), rgba(255,0,0,0.15)); flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+                        <div style="text-align: center; color: white; font-weight: 600; padding: 2rem; background: rgba(0, 0, 0, 0.5); border-radius: 16px; max-width: 500px; border: 1px solid rgba(255, 0, 0, 0.2);">
+                            <i class="fas fa-exclamation-circle" style="font-size: 3rem; color: #ff6b6b; margin-bottom: 1rem; display: block;"></i>
+                            <p style="margin: 0; font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 700;">Video Failed to Load</p>
+                            <p style="margin: 0; font-size: 0.85rem; color: rgba(255, 255, 255, 0.8); margin-bottom: 1.5rem;">Please try another option:</p>
+                            <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                                <button onclick="useYouTubeEmbed()" style="background: linear-gradient(135deg, #ff0000, #cc0000); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(255, 0, 0, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 0, 0, 0.3)'">
+                                    <i class="fab fa-youtube"></i> YouTube
+                                </button>
+                                <button onclick="downloadAndPlay()" style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(0, 123, 255, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0, 123, 255, 0.3)'">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                                <button onclick="useCustomPlayer()" style="background: linear-gradient(135deg, #666, #444); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="fas fa-redo"></i> Retry
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div id="loadingSpinner" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(255,0,0,0.1), rgba(255,0,0,0.05));">
                     <div style="text-align: center;">
@@ -224,13 +260,13 @@
                     <button class="btn-vlc" onclick="openVLC()">
                         <i class="fas fa-video"></i> VLC mein kholen
                     </button>
-                    <button class="btn-secondary" onclick="copyVideo('{{ video.video_id }}')" style="background: rgba(0, 123, 255, 0.2); border: 1px solid #007bff; color: #007bff;">
+                    <button class="btn-secondary" onclick="copyVideo('{{ video.video_id }}')" style="background: linear-gradient(135deg, rgba(0, 123, 255, 0.3), rgba(0, 123, 255, 0.1)); border: 1px solid rgba(0, 123, 255, 0.4); color: #00d4ff; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1); transition: all 0.3s;" onmouseover="this.style.background='linear-gradient(135deg, rgba(0, 123, 255, 0.5), rgba(0, 123, 255, 0.2))'; this.style.boxShadow='0 8px 24px rgba(0, 123, 255, 0.3)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(0, 123, 255, 0.3), rgba(0, 123, 255, 0.1))'; this.style.boxShadow='0 4px 12px rgba(0, 123, 255, 0.1)'; this.style.transform='translateY(0)'">
                         <i class="fas fa-copy"></i> Copy
                     </button>
-                    <button class="btn-secondary" onclick="moveVideo('{{ video.video_id }}')" style="background: rgba(255, 193, 7, 0.2); border: 1px solid #ffc107; color: #ffc107;">
+                    <button class="btn-secondary" onclick="moveVideo('{{ video.video_id }}')" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 193, 7, 0.1)); border: 1px solid rgba(255, 193, 7, 0.4); color: #ffc107; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.1); transition: all 0.3s;" onmouseover="this.style.background='linear-gradient(135deg, rgba(255, 193, 7, 0.5), rgba(255, 193, 7, 0.2))'; this.style.boxShadow='0 8px 24px rgba(255, 193, 7, 0.3)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 193, 7, 0.1))'; this.style.boxShadow='0 4px 12px rgba(255, 193, 7, 0.1)'; this.style.transform='translateY(0)'">
                         <i class="fas fa-arrows-alt"></i> Move
                     </button>
-                    <button class="btn-secondary" onclick="deleteVideo('{{ video.video_id }}')" style="background: rgba(255, 0, 0, 0.2); border: 1px solid #ff0000; color: #ff0000;">
+                    <button class="btn-secondary" onclick="deleteVideo('{{ video.video_id }}')" style="background: linear-gradient(135deg, rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0.1)); border: 1px solid rgba(255, 0, 0, 0.4); color: #ff6b6b; box-shadow: 0 4px 12px rgba(255, 0, 0, 0.1); transition: all 0.3s;" onmouseover="this.style.background='linear-gradient(135deg, rgba(255, 0, 0, 0.5), rgba(255, 0, 0, 0.2))'; this.style.boxShadow='0 8px 24px rgba(255, 0, 0, 0.3)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0.1))'; this.style.boxShadow='0 4px 12px rgba(255, 0, 0, 0.1)'; this.style.transform='translateY(0)'">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
@@ -274,10 +310,17 @@
         const sourceUrl = "{{ video.url or video.source_url }}";
         const hasLocalVideo = {{ 'true' if video.local_path else 'false' }};
         const username = "{{ video.user_id or video.username or '' }}";
-        let currentPlayer = 'youtube'; // Track which player is active
+        let currentPlayer = 'youtube';
         let html5Player = document.getElementById('html5Player');
+        let html5PlayerContainer = document.getElementById('html5PlayerContainer');
+        let videoErrorOverlay = document.getElementById('videoErrorOverlay');
         let youtubeEmbed = document.getElementById('youtubeEmbed');
+        let ytPlayerContainer = document.getElementById('ytPlayerContainer');
+        let ytErrorMessage = document.getElementById('ytErrorMessage');
         let loadingSpinner = document.getElementById('loadingSpinner');
+        let ytPlayer = null;
+        let videoSource = document.getElementById('videoSource');
+        let streamLoadAttempts = 0;
 
         // Show notification
         function showNotification(message, type = 'info') {
@@ -300,60 +343,283 @@
             setTimeout(() => notification.remove(), 3000);
         }
 
+        // Video error handler with retry logic
+        let errorRetryCount = 0;
+        const MAX_RETRY_ATTEMPTS = 2;
+        
+        function handleVideoError() {
+            console.error('❌ Video playback failed');
+            loadingSpinner.style.display = 'none';
+            
+            // Show error overlay
+            videoErrorOverlay.style.display = 'flex';
+            showNotification('❌ Video failed to load. Please try another option.', 'error');
+            
+            // Log error for debugging
+            if (html5Player.error) {
+                const errorCode = html5Player.error.code;
+                const errorMsgs = {
+                    1: 'Loading aborted',
+                    2: 'Network error',
+                    3: 'Decoding failed',
+                    4: 'Video format not supported'
+                };
+                console.error('HTML5 Error Code:', errorCode, '-', errorMsgs[errorCode] || 'Unknown');
+            }
+        }
+
+        // Video loaded successfully
+        function handleVideoLoaded() {
+            console.log('✅ Video loaded successfully');
+            videoErrorOverlay.style.display = 'none';
+            loadingSpinner.style.display = 'none';
+        }
+
+        // Add event listeners to video element
+        html5Player.addEventListener('error', function() {
+            console.error('Video element error:', this.error);
+            handleVideoError();
+        });
+
+        html5Player.addEventListener('loadeddata', function() {
+            console.log('Video data loaded');
+            handleVideoLoaded();
+        });
+
+        html5Player.addEventListener('canplay', function() {
+            console.log('✅ Video can play');
+            videoErrorOverlay.style.display = 'none';
+        });
+
+        // YouTube Player API callback
+        window.onYouTubeIframeAPIReady = function() {
+            console.log('YouTube API Ready');
+        };
+
+        // Create YouTube Player with proper error handling
+        function createYouTubePlayer() {
+            console.log('🎬 Creating YouTube player for video ID:', videoId);
+            
+            if (typeof YT === 'undefined') {
+                console.log('Loading YouTube API...');
+                const script = document.createElement('script');
+                script.src = 'https://www.youtube.com/iframe_api';
+                script.onerror = () => {
+                    console.error('Failed to load YouTube API');
+                    ytErrorMessage.style.display = 'flex';
+                    showNotification('❌ YouTube API failed. Using Custom Player...', 'error');
+                    setTimeout(() => useCustomPlayer(), 1500);
+                };
+                document.head.appendChild(script);
+                
+                let apiLoadTimeout = setTimeout(() => {
+                    if (typeof YT === 'undefined') {
+                        console.error('YouTube API timeout');
+                        ytErrorMessage.style.display = 'flex';
+                        useCustomPlayer();
+                    }
+                }, 5000);
+                
+                window.onYouTubeIframeAPIReady = function() {
+                    clearTimeout(apiLoadTimeout);
+                    createYouTubePlayerInstance();
+                };
+            } else {
+                createYouTubePlayerInstance();
+            }
+        }
+
+        function createYouTubePlayerInstance() {
+            try {
+                ytPlayer = new YT.Player(ytPlayerContainer, {
+                    height: '100%',
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: {
+                        autoplay: 0,
+                        controls: 1,
+                        modestbranding: 1,
+                        rel: 0,
+                        fs: 1,
+                        playsinline: 1,
+                        iv_load_policy: 3,
+                        origin: window.location.origin,
+                        enablejsapi: 1
+                    },
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onError': onPlayerError,
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            } catch (error) {
+                console.error('Error creating YouTube player:', error);
+                ytErrorMessage.style.display = 'flex';
+                useCustomPlayer();
+            }
+        }
+
+        function onPlayerReady(event) {
+            console.log('✅ YouTube player ready!');
+            loadingSpinner.style.display = 'none';
+        }
+
+        function onPlayerError(event) {
+            console.error('❌ YouTube Player Error Code:', event.data);
+            const errorCode = event.data;
+            
+            if (errorCode === 150 || errorCode === 151 || errorCode === 153 || errorCode === 2 || errorCode === 100 || errorCode === 101) {
+                console.log('⚠️ Video cannot be embedded or not found. Error:', errorCode);
+                ytErrorMessage.style.display = 'flex';
+                showNotification('⚠️ YouTube embed not available. Switching to Custom Player...', 'error');
+                setTimeout(() => useCustomPlayer(), 1500);
+            } else {
+                console.log('Unknown YouTube error:', errorCode);
+                ytErrorMessage.style.display = 'flex';
+                setTimeout(() => useCustomPlayer(), 1500);
+            }
+        }
+
+        function onPlayerStateChange(event) {
+            console.log('Player state changed:', event.data);
+        }
+
         // Use YouTube Embed Player
         function useYouTubeEmbed() {
             console.log('📺 Switching to YouTube Embed player...');
-            html5Player.style.display = 'none';
+            html5PlayerContainer.style.display = 'none';
             youtubeEmbed.style.display = 'block';
-            loadingSpinner.style.display = 'none';
+            ytErrorMessage.style.display = 'none';
+            loadingSpinner.style.display = 'flex';
             currentPlayer = 'youtube';
-            showNotification('✅ YouTube Player activated');
+            
+            if (!ytPlayer) {
+                createYouTubePlayer();
+            } else {
+                loadingSpinner.style.display = 'none';
+            }
+            showNotification('📺 YouTube Player activated');
         }
 
-        // Use Custom HTML5 Player
+        // Use Custom HTML5 Player - IMPROVED VERSION with better error handling
         async function useCustomPlayer() {
             console.log('🎬 Switching to Custom HTML5 player...');
+            console.log('DEBUG INFO:', {
+                videoId: videoId,
+                username: username,
+                hasLocalVideo: hasLocalVideo,
+                sourceUrl: sourceUrl
+            });
+            
             loadingSpinner.style.display = 'flex';
             youtubeEmbed.style.display = 'none';
+            ytErrorMessage.style.display = 'none';
+            html5PlayerContainer.style.display = 'block';
+            videoErrorOverlay.style.display = 'none';
             
             try {
                 // Check if local video exists
                 if (hasLocalVideo) {
                     console.log('🎥 Loading local video...');
                     const localVideoUrl = `/videos/${username}/${videoId}.mp4`;
-                    document.getElementById('videoSource').src = localVideoUrl;
+                    console.log('Local video URL:', localVideoUrl);
+                    
+                    // Test if local video is accessible
+                    try {
+                        const testResponse = await fetch(localVideoUrl, { method: 'HEAD' });
+                        if (!testResponse.ok) {
+                            throw new Error(`Local video returned ${testResponse.status}`);
+                        }
+                    } catch (e) {
+                        console.error('Local video not accessible:', e);
+                        showNotification('⚠️ Local video not accessible, trying stream...', 'error');
+                        // Fall through to stream attempt
+                    }
+                    
+                    videoSource.src = localVideoUrl;
+                    videoSource.type = 'video/mp4';
                     html5Player.load();
-                    html5Player.style.display = 'block';
-                    loadingSpinner.style.display = 'none';
                     currentPlayer = 'custom';
-                    showNotification('✅ Custom Player - Local video loaded');
+                    showNotification('✅ Custom Player - Loading local video');
+                    
+                    // Set timeout for local video load
+                    let localTimeout = setTimeout(() => {
+                        if (html5Player.readyState === 0) {
+                            console.warn('Local video load timeout');
+                            showNotification('⚠️ Local video slow to load, trying stream...', 'error');
+                            // Try stream instead
+                            loadCustomPlayerWithStream();
+                        }
+                    }, 15000);
+                    
+                    html5Player.addEventListener('loadeddata', () => {
+                        clearTimeout(localTimeout);
+                        console.log('✅ Local video loaded');
+                    }, { once: true });
+                    
                     return;
                 }
-
-                // Try to get streaming URL
-                console.log('🔄 Fetching streaming URL...');
-                const response = await fetch(`/api/stream/${videoId}`);
-                const data = await response.json();
-
-                if (data.stream_url) {
-                    console.log('✅ Stream URL obtained, loading in player...');
-                    document.getElementById('videoSource').src = data.stream_url;
-                    html5Player.load();
-                    html5Player.style.display = 'block';
-                    loadingSpinner.style.display = 'none';
-                    currentPlayer = 'custom';
-                    showNotification('✅ Custom Player - Stream loaded');
-                } else {
-                    console.error('Stream URL not available');
-                    loadingSpinner.style.display = 'none';
-                    showNotification('❌ Could not load custom player. Try YouTube embed.', 'error');
-                    useYouTubeEmbed();
-                }
+                
+                // Load via stream
+                loadCustomPlayerWithStream();
+                
             } catch (error) {
-                console.error('Error loading custom player:', error);
+                console.error('❌ Error loading custom player:', error);
+                console.error('Error stack:', error.stack);
                 loadingSpinner.style.display = 'none';
-                showNotification('❌ Error loading custom player', 'error');
-                useYouTubeEmbed();
+                
+                let errorMsg = error.message;
+                if (error.message.includes('404')) {
+                    errorMsg = 'Video not found in database (404)';
+                } else if (error.message.includes('401')) {
+                    errorMsg = 'Authentication failed (401)';
+                } else if (error.message.includes('403')) {
+                    errorMsg = 'Access denied - video belongs to different user (403)';
+                }
+                
+                showNotification('❌ Custom player failed: ' + errorMsg, 'error');
+                
+                // Try YouTube as fallback
+                console.log('🔄 Falling back to YouTube...');
+                setTimeout(() => useYouTubeEmbed(), 1000);
+            }
+        }
+
+        // Load custom player with stream via proxy
+        async function loadCustomPlayerWithStream() {
+            try {
+                // Use server proxy for streaming - MORE RELIABLE
+                console.log('🔄 Using server proxy for streaming...');
+                console.log(`📍 Calling: /api/proxy_stream/${videoId}`);
+                
+                const proxyUrl = `/api/proxy_stream/${videoId}`;
+                console.log('Proxy URL:', proxyUrl);
+                
+                // Set video source to proxy URL
+                videoSource.src = proxyUrl;
+                videoSource.type = 'video/mp4';
+                html5Player.load();
+                currentPlayer = 'custom';
+                streamLoadAttempts = 0;
+                showNotification('✅ Custom Player - Streaming via proxy');
+                
+                // Add timeout for stream loading
+                let streamTimeout = setTimeout(() => {
+                    console.warn('⏱️ Stream timeout - video did not load in 20 seconds');
+                    if (html5Player.readyState === 0) {
+                        console.error('Stream timeout - video did not load in time');
+                        handleVideoError();
+                    }
+                }, 20000);
+                
+                html5Player.addEventListener('loadeddata', () => {
+                    clearTimeout(streamTimeout);
+                    console.log('✅ Stream data loaded successfully');
+                }, { once: true });
+                
+            } catch (error) {
+                console.error('❌ Error with stream:', error);
+                handleVideoError();
             }
         }
 
@@ -363,16 +629,17 @@
             showNotification('⬇️ Preparing download... Opening in new tab');
             
             try {
-                // Get the stream URL
-                const response = await fetch(`/api/stream/${videoId}`);
+                const response = await fetch(`/api/stream/${videoId}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
                 const data = await response.json();
 
                 if (data.stream_url) {
-                    // Open download in new tab
                     window.open(data.stream_url, '_blank');
                     showNotification('✅ Download link opened', 'success');
                 } else {
-                    // Fallback to YouTube
                     window.open(sourceUrl, '_blank');
                     showNotification('✅ YouTube opened', 'success');
                 }
@@ -386,18 +653,39 @@
         // Initialize player on page load
         async function initializePlayer() {
             console.log('🚀 Initializing player...');
+            console.log('═══════════════════════════════════════');
+            console.log('DEBUG INFORMATION:');
+            console.log('Video ID:', videoId);
+            console.log('Username:', username);
+            console.log('Has Local Video:', hasLocalVideo);
+            console.log('Source URL:', sourceUrl);
+            console.log('═══════════════════════════════════════');
             
-            // Try to load custom player first
+            // Try to load custom player first (more reliable)
             if (hasLocalVideo) {
                 console.log('🎥 Local video available, loading with custom player...');
                 useCustomPlayer();
             } else {
                 console.log('🔄 No local video, checking stream availability...');
                 try {
-                    const response = await fetch(`/api/stream/${videoId}`);
+                    console.log(`📍 Checking stream availability for video: ${videoId}`);
+                    const response = await fetch(`/api/stream/${videoId}`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+
+                    console.log(`📊 Stream check response status: ${response.status}`);
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error(`⚠️ Stream check failed: ${response.status} - ${errorText}`);
+                        throw new Error(`API returned ${response.status}`);
+                    }
+
                     const data = await response.json();
+                    console.log('📥 Stream availability data:', data);
                     
-                    if (data.stream_url) {
+                    if (data.stream_url && data.stream_url !== 'null' && data.stream_url !== '') {
                         console.log('✅ Stream available, loading with custom player...');
                         useCustomPlayer();
                     } else {
@@ -406,6 +694,7 @@
                     }
                 } catch (error) {
                     console.error('Error checking stream:', error);
+                    console.error('Error details:', error.message);
                     console.log('Falling back to YouTube embed...');
                     useYouTubeEmbed();
                 }
@@ -532,6 +821,7 @@
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ Watch page loaded for video:', videoId);
+            console.log('🔧 Initializing player...');
             initializePlayer();
         });
     </script>
