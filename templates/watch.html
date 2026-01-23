@@ -274,133 +274,143 @@
         const sourceUrl = "{{ video.url or video.source_url }}";
         const hasLocalVideo = {{ 'true' if video.local_path else 'false' }};
         const username = "{{ video.user_id or video.username or '' }}";
-        let player;
+        let currentPlayer = 'youtube'; // Track which player is active
         let html5Player = document.getElementById('html5Player');
+        let youtubeEmbed = document.getElementById('youtubeEmbed');
         let loadingSpinner = document.getElementById('loadingSpinner');
 
-        // Try to load local video first, then streaming, then YouTube embed
-        async function loadVideoStream() {
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'error' ? '#ff4444' : type === 'success' ? '#44ff44' : '#4444ff';
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: ${bgColor};
+                color: white;
+                padding: 1rem;
+                border-radius: 4px;
+                z-index: 10000;
+                font-weight: 600;
+                max-width: 300px;
+            `;
+            notification.innerHTML = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Use YouTube Embed Player
+        function useYouTubeEmbed() {
+            console.log('📺 Switching to YouTube Embed player...');
+            html5Player.style.display = 'none';
+            youtubeEmbed.style.display = 'block';
+            loadingSpinner.style.display = 'none';
+            currentPlayer = 'youtube';
+            showNotification('✅ YouTube Player activated');
+        }
+
+        // Use Custom HTML5 Player
+        async function useCustomPlayer() {
+            console.log('🎬 Switching to Custom HTML5 player...');
+            loadingSpinner.style.display = 'flex';
+            youtubeEmbed.style.display = 'none';
+            
             try {
                 // Check if local video exists
                 if (hasLocalVideo) {
-                    console.log('🎥 Local video available, loading directly...');
+                    console.log('🎥 Loading local video...');
                     const localVideoUrl = `/videos/${username}/${videoId}.mp4`;
                     document.getElementById('videoSource').src = localVideoUrl;
                     html5Player.load();
                     html5Player.style.display = 'block';
                     loadingSpinner.style.display = 'none';
-                    document.getElementById('player').style.display = 'none';
-                    console.log('✅ Local video loaded successfully!');
-                    return true;
-                } else {
-                    console.log('🔄 Local video not available, attempting stream...');
-                    const response = await fetch(`/api/stream/${videoId}`);
-                    const data = await response.json();
+                    currentPlayer = 'custom';
+                    showNotification('✅ Custom Player - Local video loaded');
+                    return;
+                }
 
-                    if (data.stream_url) {
-                        console.log('✅ Direct stream available!');
-                        document.getElementById('videoSource').src = data.stream_url;
-                        html5Player.load();
-                        html5Player.style.display = 'block';
-                        loadingSpinner.style.display = 'none';
-                        document.getElementById('player').style.display = 'none';
-                        return true;
-                    } else {
-                        console.log('⚠️ Direct stream not available, falling back to YouTube embed');
-                        return false;
-                    }
+                // Try to get streaming URL
+                console.log('🔄 Fetching streaming URL...');
+                const response = await fetch(`/api/stream/${videoId}`);
+                const data = await response.json();
+
+                if (data.stream_url) {
+                    console.log('✅ Stream URL obtained, loading in player...');
+                    document.getElementById('videoSource').src = data.stream_url;
+                    html5Player.load();
+                    html5Player.style.display = 'block';
+                    loadingSpinner.style.display = 'none';
+                    currentPlayer = 'custom';
+                    showNotification('✅ Custom Player - Stream loaded');
+                } else {
+                    console.error('Stream URL not available');
+                    loadingSpinner.style.display = 'none';
+                    showNotification('❌ Could not load custom player. Try YouTube embed.', 'error');
+                    useYouTubeEmbed();
                 }
             } catch (error) {
-                console.error('❌ Error loading video:', error);
-                return false;
+                console.error('Error loading custom player:', error);
+                loadingSpinner.style.display = 'none';
+                showNotification('❌ Error loading custom player', 'error');
+                useYouTubeEmbed();
             }
         }
 
-        // Initialize video player
-        async function initializePlayer() {
-            const streamLoaded = await loadVideoStream();
+        // Download and Play
+        async function downloadAndPlay() {
+            console.log('⬇️ Starting download...');
+            showNotification('⬇️ Preparing download... Opening in new tab');
+            
+            try {
+                // Get the stream URL
+                const response = await fetch(`/api/stream/${videoId}`);
+                const data = await response.json();
 
-            if (!streamLoaded) {
-                // Fallback to YouTube embed
-                loadingSpinner.style.display = 'none';
-                document.getElementById('player').style.display = 'block';
-
-                // Load YouTube IFrame API if not already loaded
-                if (typeof YT === 'undefined') {
-                    window.onYouTubeIframeAPIReady = function() {
-                        player = new YT.Player('player', {
-                            height: '100%',
-                            width: '100%',
-                            videoId: videoId,
-                            playerVars: {
-                                autoplay: 0,
-                                controls: 1,
-                                modestbranding: 1,
-                                rel: 0,
-                                fs: 1,
-                                playsinline: 1,
-                                iv_load_policy: 3,
-                                origin: window.location.origin
-                            },
-                            events: {
-                                'onReady': onPlayerReady,
-                                'onError': onPlayerError
-                            }
-                        });
-                    };
-
-                    // Load the YouTube API script
-                    const script = document.createElement('script');
-                    script.src = 'https://www.youtube.com/iframe_api';
-                    document.head.appendChild(script);
+                if (data.stream_url) {
+                    // Open download in new tab
+                    window.open(data.stream_url, '_blank');
+                    showNotification('✅ Download link opened', 'success');
                 } else {
-                    // API already loaded, create player directly
-                    player = new YT.Player('player', {
-                        height: '100%',
-                        width: '100%',
-                        videoId: videoId,
-                        playerVars: {
-                            autoplay: 0,
-                            controls: 1,
-                            modestbranding: 1,
-                            rel: 0,
-                            fs: 1,
-                            playsinline: 1,
-                            iv_load_policy: 3,
-                            origin: window.location.origin
-                        },
-                        events: {
-                            'onReady': onPlayerReady,
-                            'onError': onPlayerError
-                        }
-                    });
+                    // Fallback to YouTube
+                    window.open(sourceUrl, '_blank');
+                    showNotification('✅ YouTube opened', 'success');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                window.open(sourceUrl, '_blank');
+                showNotification('✅ YouTube opened', 'success');
+            }
+        }
+
+        // Initialize player on page load
+        async function initializePlayer() {
+            console.log('🚀 Initializing player...');
+            
+            // Try to load custom player first
+            if (hasLocalVideo) {
+                console.log('🎥 Local video available, loading with custom player...');
+                useCustomPlayer();
+            } else {
+                console.log('🔄 No local video, checking stream availability...');
+                try {
+                    const response = await fetch(`/api/stream/${videoId}`);
+                    const data = await response.json();
+                    
+                    if (data.stream_url) {
+                        console.log('✅ Stream available, loading with custom player...');
+                        useCustomPlayer();
+                    } else {
+                        console.log('⚠️ No stream available, falling back to YouTube embed...');
+                        useYouTubeEmbed();
+                    }
+                } catch (error) {
+                    console.error('Error checking stream:', error);
+                    console.log('Falling back to YouTube embed...');
+                    useYouTubeEmbed();
                 }
             }
         }
-
-        function onPlayerReady(event) {
-            console.log('✅ YouTube player ready!');
-        }
-
-        function onPlayerError(event) {
-            console.log('YouTube player error:', event.data);
-            if (event.data === 150 || event.data === 151 || event.data === 153) {
-                // Embedding not allowed - show fallback
-                document.getElementById('player').innerHTML = `
-                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(255,0,0,0.1), rgba(255,0,0,0.05)); cursor: pointer;" onclick="window.open('${sourceUrl}', '_blank')">
-                        <div style="text-align: center;">
-                            <i class="fas fa-play-circle" style="font-size: 5rem; color: #ff0000; margin-bottom: 1rem;"></i>
-                            <p style="color: white; font-size: 1.1rem; font-weight: 600; margin: 0;">Click to Watch on YouTube</p>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            initializePlayer();
-        });
 
         function openYouTube() {
             window.open(sourceUrl, '_blank');
@@ -452,8 +462,6 @@
 
                 if (response.ok) {
                     alert('✓ Video copied successfully!');
-                    // Optionally redirect to the new folder
-                    // window.location.href = '/folder/' + encodeURIComponent(newFolder.trim());
                 } else {
                     alert('Error: ' + (data.detail || 'Failed to copy video'));
                 }
@@ -521,7 +529,11 @@
             }
         }
 
-        console.log('✅ Watch page loaded for video:', videoId);
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ Watch page loaded for video:', videoId);
+            initializePlayer();
+        });
     </script>
 </body>
 </html>
