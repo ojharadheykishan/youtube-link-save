@@ -230,6 +230,9 @@
             <button onclick="showSection('users')" id="btn-users">
                 <i class="fas fa-users"></i> User Management
             </button>
+            <button onclick="showSection('videos')" id="btn-videos">
+                <i class="fas fa-video"></i> Video Management
+            </button>
             <button onclick="showSection('content')" id="btn-content">
                 <i class="fas fa-video"></i> Content Moderation
             </button>
@@ -366,17 +369,102 @@
         <!-- System Settings Section -->
         <div id="settings-section" class="admin-section" style="display: none;">
             <h2><i class="fas fa-cog"></i> System Settings</h2>
-            <p>Configure system-wide settings</p>
-            <div id="system-settings">
-                <p>System settings features coming soon...</p>
+            
+            <div style="margin-bottom: 2rem;">
+                <h3>Admin Control</h3>
+                <div style="background: var(--secondary-color); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <label style="display: flex; align-items: center; gap: 1rem; cursor: pointer;">
+                        <input type="checkbox" id="admin-enabled" onchange="toggleAdminMode()">
+                        <span><strong>Enable Admin Mode</strong></span>
+                    </label>
+                    <p style="margin: 0.5rem 0 0 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                        When disabled, all admin functions are locked. Enable to access all features.
+                    </p>
+                </div>
             </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <h3>System Configuration</h3>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label><strong>Max Upload Size (MB):</strong></label>
+                    <input type="number" id="max-upload-size" min="1" max="5000" placeholder="Max upload size">
+                    <button onclick="updateSetting('max_upload_size')" style="padding: 0.5rem 1rem; margin-left: 0.5rem; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer;">Update</button>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label><strong>Max Videos per User:</strong></label>
+                    <input type="number" id="max-videos-user" min="1" placeholder="Max videos per user">
+                    <button onclick="updateSetting('max_videos_per_user')" style="padding: 0.5rem 1rem; margin-left: 0.5rem; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer;">Update</button>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label><strong>Enable Video Moderation:</strong></label>
+                    <input type="checkbox" id="enable-moderation" onchange="updateSetting('enable_moderation')">
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label><strong>Enable User Notifications:</strong></label>
+                    <input type="checkbox" id="enable-notifications" onchange="updateSetting('enable_notifications')">
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+                <h3>Database Management</h3>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="backupDatabase()" style="padding: 0.75rem 1.5rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-download"></i> Backup Database
+                    </button>
+                    <button onclick="clearCache()" style="padding: 0.75rem 1.5rem; background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-broom"></i> Clear Cache
+                    </button>
+                    <button onclick="resetDatabase()" style="padding: 0.75rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-exclamation-triangle"></i> Reset DB (Careful!)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Management Section -->
+        <div id="videos-section" class="admin-section" style="display: none;">
+            <h2><i class="fas fa-video"></i> Video Management</h2>
+            
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="video-search" placeholder="Search videos by title, URL, or user..." style="padding: 0.5rem; width: 100%; border: 1px solid var(--border-color); border-radius: 4px;">
+            </div>
+
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>User</th>
+                        <th>URL</th>
+                        <th>Views</th>
+                        <th>Added Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="videos-table-body">
+                    <tr>
+                        <td colspan="6">Loading videos...</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
     <script>
         let currentSection = 'dashboard';
+        let adminEnabled = true; // Track admin mode status
 
         function showSection(sectionName) {
+            // Check if admin is disabled
+            if (!adminEnabled && sectionName !== 'dashboard') {
+                alert('Admin mode is disabled. Enable it in System Settings to access other features.');
+                return;
+            }
+
             // Hide all sections
             document.querySelectorAll('.admin-section').forEach(section => {
                 section.style.display = 'none';
@@ -403,6 +491,10 @@
                     await loadDashboardStats();
                 } else if (section === 'users') {
                     await loadUsers();
+                } else if (section === 'videos') {
+                    await loadVideos();
+                } else if (section === 'settings') {
+                    await loadSettings();
                 }
             } catch (error) {
                 console.error('Error loading section data:', error);
@@ -459,6 +551,94 @@
             }
         }
 
+        async function loadVideos() {
+            try {
+                const response = await fetch('/api/admin/videos');
+                const data = await response.json();
+                const videos = data.videos || [];
+
+                const tbody = document.getElementById('videos-table-body');
+                if (videos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6">No videos found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = videos.map(video => `
+                    <tr>
+                        <td>${video.title || 'Untitled'}</td>
+                        <td>${video.user_id || 'Unknown'}</td>
+                        <td><a href="${video.url}" target="_blank" style="color: #ff6b6b; text-decoration: none;">${video.url.substring(0, 30)}...</a></td>
+                        <td>${video.views_count || 0}</td>
+                        <td>${new Date(video.added_date).toLocaleDateString()}</td>
+                        <td>
+                            <button class="action-btn btn-delete" onclick="deleteVideo('${video.video_id}')">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading videos:', error);
+                document.getElementById('videos-table-body').innerHTML = '<tr><td colspan="6">Error loading videos</td></tr>';
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/admin/settings');
+                const settings = await response.json();
+
+                document.getElementById('max-upload-size').value = settings.max_upload_size || 100;
+                document.getElementById('max-videos-user').value = settings.max_videos_per_user || 1000;
+                document.getElementById('enable-moderation').checked = settings.enable_moderation || false;
+                document.getElementById('enable-notifications').checked = settings.enable_notifications || true;
+                document.getElementById('admin-enabled').checked = settings.admin_enabled !== false;
+                
+                adminEnabled = settings.admin_enabled !== false;
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        async function toggleAdminMode() {
+            const enabled = document.getElementById('admin-enabled').checked;
+            adminEnabled = enabled;
+            await updateSetting('admin_enabled', enabled);
+        }
+
+        async function updateSetting(setting, value) {
+            let settingValue = value;
+            
+            if (setting === 'max_upload_size') {
+                settingValue = parseInt(document.getElementById('max-upload-size').value);
+            } else if (setting === 'max_videos_per_user') {
+                settingValue = parseInt(document.getElementById('max-videos-user').value);
+            } else if (setting === 'enable_moderation') {
+                settingValue = document.getElementById('enable-moderation').checked;
+            } else if (setting === 'enable_notifications') {
+                settingValue = document.getElementById('enable-notifications').checked;
+            } else if (setting === 'admin_enabled') {
+                settingValue = value !== undefined ? value : adminEnabled;
+            }
+
+            try {
+                const response = await fetch('/api/admin/settings/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [setting]: settingValue })
+                });
+
+                if (response.ok) {
+                    alert('Setting updated successfully');
+                } else {
+                    alert('Error updating setting');
+                }
+            } catch (error) {
+                console.error('Error updating setting:', error);
+                alert('Error updating setting');
+            }
+        }
+
         async function toggleUserStatus(username) {
             if (!confirm(`Are you sure you want to change ${username}'s status?`)) return;
 
@@ -493,20 +673,104 @@
             }
         }
 
-        // Search functionality
-        document.getElementById('user-search').addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#users-table-body tr');
+        async function deleteVideo(videoId) {
+            if (!confirm('Are you sure you want to delete this video?')) return;
 
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? '' : 'none';
+            try {
+                const response = await fetch(`/api/admin/videos/${videoId}/delete`, { method: 'DELETE' });
+                if (response.ok) {
+                    loadVideos();
+                    alert('Video deleted successfully');
+                } else {
+                    alert('Error deleting video');
+                }
+            } catch (error) {
+                console.error('Error deleting video:', error);
+                alert('Error deleting video');
+            }
+        }
+
+        async function backupDatabase() {
+            try {
+                const response = await fetch('/api/admin/backup', { method: 'POST' });
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `backup-${new Date().toISOString()}.zip`;
+                    a.click();
+                    alert('Backup downloaded successfully');
+                } else {
+                    alert('Error creating backup');
+                }
+            } catch (error) {
+                console.error('Error backing up database:', error);
+                alert('Error creating backup');
+            }
+        }
+
+        async function clearCache() {
+            if (!confirm('Are you sure you want to clear the cache? This may affect performance.')) return;
+
+            try {
+                const response = await fetch('/api/admin/clear-cache', { method: 'POST' });
+                if (response.ok) {
+                    alert('Cache cleared successfully');
+                } else {
+                    alert('Error clearing cache');
+                }
+            } catch (error) {
+                console.error('Error clearing cache:', error);
+                alert('Error clearing cache');
+            }
+        }
+
+        async function resetDatabase() {
+            if (!confirm('⚠️ WARNING: This will PERMANENTLY delete all data! Are you absolutely sure?')) return;
+            if (!confirm('⚠️ FINAL WARNING: This action CANNOT be undone. Type "DELETE ALL" to confirm.')) return;
+
+            try {
+                const response = await fetch('/api/admin/reset-database', { method: 'POST' });
+                if (response.ok) {
+                    alert('Database reset successfully. System will reload.');
+                    location.reload();
+                } else {
+                    alert('Error resetting database');
+                }
+            } catch (error) {
+                console.error('Error resetting database:', error);
+                alert('Error resetting database');
+            }
+        }
+
+        // Search functionality
+        if (document.getElementById('user-search')) {
+            document.getElementById('user-search').addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#users-table-body tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                });
             });
-        });
+        }
+
+        if (document.getElementById('video-search')) {
+            document.getElementById('video-search').addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#videos-table-body tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                });
+            });
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             loadSectionData('dashboard');
+            loadSettings();
         });
     </script>
 </body>

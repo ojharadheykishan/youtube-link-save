@@ -98,7 +98,9 @@ async def logout_get(response: Response):
 
 @app.post("/logout")
 async def logout_post(response: Response):
-    response = RedirectResponse("/start", status_code=303)
+    # Redirect to login page with proper 303 status to ensure GET request
+    from starlette.responses import RedirectResponse
+    response = RedirectResponse(url="/login", status_code=303)
     response.delete_cookie("auth_token")
     return response
 
@@ -1412,6 +1414,276 @@ async def delete_user(target_username: str, auth_token: str = Cookie(None)):
     save_users(users)
 
     return {"message": f"User {target_username} and all their data deleted"}
+
+@app.get("/api/admin/videos")
+async def get_all_videos(auth_token: str = Cookie(None)):
+    # Verify admin access
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        user = users.get(username)
+
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+    db = load_db()
+    videos = []
+    
+    for video_id, video_data in db.items():
+        videos.append({
+            "video_id": video_id,
+            "title": video_data.get("title", "Untitled"),
+            "url": video_data.get("url", ""),
+            "user_id": video_data.get("user_id", "Unknown"),
+            "views_count": video_data.get("views_count", 0),
+            "added_date": video_data.get("added_date", "")
+        })
+
+    return {"videos": videos}
+
+@app.delete("/api/admin/videos/{video_id}/delete")
+async def delete_video_admin(video_id: str, auth_token: str = Cookie(None)):
+    # Verify admin access
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        user = users.get(username)
+
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+    db = load_db()
+    
+    if video_id not in db:
+        raise HTTPException(status_code=404, detail="Video not found")
+
+    # Delete video thumbnail if exists
+    video_data = db[video_id]
+    thumbnail_path = video_data.get("thumbnail_path")
+    if thumbnail_path and os.path.exists(thumbnail_path):
+        try:
+            os.remove(thumbnail_path)
+        except:
+            pass
+
+    del db[video_id]
+    save_db(db)
+
+    return {"message": f"Video {video_id} deleted successfully"}
+
+@app.get("/api/admin/settings")
+async def get_admin_settings(auth_token: str = Cookie(None)):
+    # Verify admin access
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        user = users.get(username)
+
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+    # Load admin settings from JSON file
+    settings_file = "admin_settings.json"
+    default_settings = {
+        "admin_enabled": True,
+        "max_upload_size": 100,
+        "max_videos_per_user": 1000,
+        "enable_moderation": False,
+        "enable_notifications": True
+    }
+
+    try:
+        if os.path.exists(settings_file):
+            with open(settings_file, 'r') as f:
+                settings = json.load(f)
+                return {**default_settings, **settings}
+    except:
+        pass
+
+    return default_settings
+
+@app.post("/api/admin/settings/update")
+async def update_admin_settings(request: Request, auth_token: str = Cookie(None)):
+    # Verify admin access
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        user = users.get(username)
+
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+    settings_file = "admin_settings.json"
+    
+    # Get existing settings
+    existing_settings = {}
+    if os.path.exists(settings_file):
+        try:
+            with open(settings_file, 'r') as f:
+                existing_settings = json.load(f)
+        except:
+            pass
+
+    # Get new settings from request
+    body = await request.json()
+    existing_settings.update(body)
+
+    # Save settings
+    with open(settings_file, 'w') as f:
+        json.dump(existing_settings, f, indent=2)
+
+    return {"message": "Settings updated successfully", "settings": existing_settings}
+
+@app.post("/api/admin/backup")
+async def backup_database(auth_token: str = Cookie(None)):
+    # Verify admin access
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        user = users.get(username)
+
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+    # Create backup of all database files
+    import zipfile
+    
+    backup_filename = f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+    
+    try:
+        with zipfile.ZipFile(backup_filename, 'w') as zipf:
+            # Add all JSON database files
+            db_files = [
+                VIDEO_DB, FOLDER_DB, PLAYLIST_DB, 
+                'users_db.json', 'admin_settings.json'
+            ]
+            
+            for db_file in db_files:
+                if os.path.exists(db_file):
+                    zipf.write(db_file)
+
+        return FileResponse(backup_filename, media_type='application/zip', filename=backup_filename)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Backup failed: {str(e)}")
+
+@app.post("/api/admin/clear-cache")
+async def clear_cache(auth_token: str = Cookie(None)):
+    # Verify admin access
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        user = users.get(username)
+
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+    # Clear cache files
+    try:
+        if os.path.exists("video_cache.json"):
+            with open("video_cache.json", 'w') as f:
+                json.dump({}, f)
+
+        # Clear __pycache__
+        if os.path.exists("__pycache__"):
+            shutil.rmtree("__pycache__")
+
+        return {"message": "Cache cleared successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error clearing cache: {str(e)}")
+
+@app.post("/api/admin/reset-database")
+async def reset_database(auth_token: str = Cookie(None)):
+    # Verify admin access
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        user = users.get(username)
+
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+    # Reset all databases but keep admin user
+    try:
+        # Reset video database
+        with open(VIDEO_DB, 'w') as f:
+            json.dump({}, f)
+
+        # Reset folder database
+        with open(FOLDER_DB, 'w') as f:
+            json.dump({}, f)
+
+        # Reset playlist database
+        with open(PLAYLIST_DB, 'w') as f:
+            json.dump({}, f)
+
+        # Keep only admin user
+        admin_user = {
+            "admin": {
+                "username": "admin",
+                "password": "admin",
+                "email": "admin@videohub.local",
+                "role": "admin",
+                "is_active": True,
+                "created_at": datetime.now().isoformat(),
+                "last_login": None,
+                "login_count": 0
+            }
+        }
+        with open('users_db.json', 'w') as f:
+            json.dump(admin_user, f, indent=2)
+
+        return {"message": "Database reset successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error resetting database: {str(e)}")
 
 @app.post("/api/create_subfolder")
 async def create_subfolder(parent_path: str = Form(...), subfolder_name: str = Form(...), auth_token: str = Cookie(None)):
