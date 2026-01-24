@@ -199,7 +199,24 @@
 
     <div class="footer">
         <p>© 2024 VideoHub. Developed by Radhey Kishan Ojha</p>
-        <p>
+        <div class="social-links">
+            <a href="https://wa.me/919660131376" target="_blank" class="social-link" title="WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+            <a href="https://facebook.com/radheykishanojha" target="_blank" class="social-link" title="Facebook">
+                <i class="fab fa-facebook"></i>
+            </a>
+            <a href="https://instagram.com/radheykishanojha" target="_blank" class="social-link" title="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://twitter.com/radheykishanojha" target="_blank" class="social-link" title="Twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="https://linkedin.com/in/radheykishanojha" target="_blank" class="social-link" title="LinkedIn">
+                <i class="fab fa-linkedin"></i>
+            </a>
+        </div>
+        <p style="margin-top: 1rem;">
             <a href="#" onclick="showAbout()">About</a> • 
             <a href="#" onclick="showFeatures()">Features</a> • 
             <a href="#" onclick="showContact()">Contact</a>
@@ -219,6 +236,45 @@
             alert('Developed by Radhey Kishan Ojha. Contact: radhey@example.com');
         }
     </script>
+
+    <style>
+        .social-links {
+            margin: 1rem 0;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .social-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .social-link i {
+            transition: transform 0.3s ease;
+        }
+
+        .social-link:hover i {
+            transform: scale(1.1);
+        }
+    </style>
     <script src="/static/js/popup.js"></script>
 </body>
 </html>

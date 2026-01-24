@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VideoHub - Modern YouTube Style Video Library</title>
     <link rel="stylesheet" href="/static/css/youtube.css">
+    <link rel="stylesheet" href="/static/css/modern-section.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Modern Animated Homepage Styles */
@@ -388,50 +389,76 @@
     </style>
 </head>
 <body>
-    <!-- Modern Animated Hero Section -->
-    <section class="hero-section">
-        <div class="hero-content">
-            <h1 class="hero-title">
-                <i class="fas fa-play-circle"></i>
-                Welcome to VideoHub
-            </h1>
-            <p class="hero-subtitle">
-                Your ultimate YouTube video library with modern features, seamless playback, and intelligent organization
-            </p>
-            <div class="hero-stats">
-                <div class="stat-item">
-                    <span class="stat-number">{{ videos|length if videos else 0 }}</span>
-                    <span class="stat-label">Videos</span>
+    <!-- Modern Animated Section -->
+    <section class="modern-section">
+        <!-- VideoHub Content -->
+        <div class="vh-content">
+            <div class="vh-main">
+                <h1 class="vh-title">
+                    <i class="fas fa-play-circle"></i>
+                    VideoHub
+                </h1>
+                <p class="vh-subtitle">Your Personal Video Library</p>
+                
+                <div class="vh-stats">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ videos|length if videos else 0 }}</div>
+                        <div class="stat-label">Videos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{{ folder_hierarchy|length if folder_hierarchy else 0 }}</div>
+                        <div class="stat-label">Folders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">
+                            {% if current_user %}
+                                {{ current_user.username }}
+                            {% else %}
+                                Guest
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">User</div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">{{ folder_hierarchy|length if folder_hierarchy else 0 }}</span>
-                    <span class="stat-label">Folders</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">{{ current_user.username if current_user else 'Guest' }}</span>
-                    <span class="stat-label">User</span>
+
+                <div class="vh-actions">
+                    {% if current_user %}
+                        <button class="vh-btn-primary" onclick="openAddVideoModal()">
+                            <i class="fas fa-plus"></i>
+                            Add Video
+                        </button>
+                        <button class="vh-btn-secondary" onclick="openAddPlaylistModal()">
+                            <i class="fas fa-list"></i>
+                            Add Playlist
+                        </button>
+                    {% else %}
+                        <button class="vh-btn-primary" onclick="window.location.href='/login'">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Login
+                        </button>
+                        <button class="vh-btn-secondary" onclick="window.location.href='/register'">
+                            <i class="fas fa-user-plus"></i>
+                            Register
+                        </button>
+                    {% endif %}
                 </div>
             </div>
-            <div class="hero-buttons">
-                {% if current_user %}
-                <button class="btn-hero btn-primary-hero" onclick="openAddVideoModal()">
-                    <i class="fas fa-plus"></i>
-                    Add New Video
-                </button>
-                <a href="#videos" class="btn-hero btn-secondary-hero">
-                    <i class="fas fa-play"></i>
-                    Browse Videos
-                </a>
-                {% else %}
-                <a href="/login" class="btn-hero btn-primary-hero">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Get Started
-                </a>
-                <a href="/register" class="btn-hero btn-secondary-hero">
-                    <i class="fas fa-user-plus"></i>
-                    Create Account
-                </a>
-                {% endif %}
+        </div>
+
+        <!-- AI Character -->
+        <div class="ai-character">
+            <div class="character-container">
+                <img src="/static/images/ai-character.svg" alt="AI Character" class="character-image">
+                <div class="welcome-popup">
+                    <div class="popup-header">
+                        <i class="fas fa-pray"></i>
+                        <span>Welcome!</span>
+                    </div>
+                    <div class="popup-content">
+                        🙏 <b>Thank You & Welcome!</b><br>
+                        Radhey Kishan Ojha Website me aapka swagat hai.
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -1062,14 +1089,16 @@
                     body: formData
                 });
 
-                if (response.ok) {
-                    const result = await response.json();
-                    showNotification('✅ Playlist import started! All videos from the playlist are being added for streaming playback.', 'success');
+                const result = await response.json();
+
+                if (response.ok && !result.error) {
+                    const videoCount = result.total_videos || 0;
+                    showNotification(`✅ Playlist imported successfully! Added ${videoCount} videos for streaming playback.`, 'success');
                     clearPlaylistForm();
                     setTimeout(() => location.reload(), 2000);
                 } else {
-                    const error = await response.json();
-                    showNotification('❌ Error importing playlist: ' + (error.detail || 'Unknown error'), 'error');
+                    const errorMsg = result.error || result.detail || 'Unknown error';
+                    showNotification('❌ Error importing playlist: ' + errorMsg, 'error');
                 }
             } catch (error) {
                 showNotification('❌ Error importing playlist: ' + error.message, 'error');
@@ -1382,12 +1411,13 @@
             window.location.href = '/admin';
         }
     </script>
+    <script src="/static/js/modern-section.js"></script>
     <script src="/static/js/popup.js"></script>
     
-    <!-- Floating Boy Animation -->
-    <div class="floating-boy">
-        <img src="https://cdn.pixabay.com/photo/2017/01/31/13/14/avatar-2026510_1280.png" alt="Cartoon Boy" class="floating-boy-img">
-        <span class="floating-boy-text">made by radhey</span>
+    <!-- AI Creator Animation -->
+    <div class="floating-creator">
+        <img src="/static/images/ai-character.svg" alt="Rajasthani AI Character" class="floating-creator-img">
+        <span class="floating-creator-text">Made By Radhey Kishan Ojha</span>
     </div>
 </body>
 </html>

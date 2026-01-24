@@ -2,13 +2,14 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Popup configuration
     const popupConfig = {
-        title: "Made by Radhey Kishan Ojha",
+        title: "Made By Radhey Kishan Ojha",
         message: "This amazing YouTube-style video management system was created by Radhey Kishan Ojha. Enjoy the seamless video experience!",
-        icon: "fa-heart",
-        color: "linear-gradient(135deg, #ff6b6b, #ee5a24)",
-        delay: Math.random() * 30000 + 10000, // Random delay between 10-40 seconds
-        duration: 5000, // Show for 5 seconds
-        sound: true
+        icon: "fa-code",
+        color: "linear-gradient(135deg, #667eea, #764ba2)",
+        delay: 5000, // Show 5 seconds after page load (login)
+        duration: 6000, // Show for 6 seconds
+        sound: true,
+        repeatInterval: 30 * 60 * 1000 // 30 minutes in milliseconds
     };
 
     // Create popup element
@@ -18,7 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
         popup.innerHTML = `
             <div class="radhey-popup-content">
                 <div class="radhey-popup-header">
-                    <i class="fas ${popupConfig.icon}"></i>
+                    <div class="radhey-icon-wrapper">
+                        <i class="fas ${popupConfig.icon}"></i>
+                    </div>
                     <h3>${popupConfig.title}</h3>
                     <button class="radhey-popup-close" onclick="closePopup()">×</button>
                 </div>
@@ -26,7 +29,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p>${popupConfig.message}</p>
                 </div>
                 <div class="radhey-popup-footer">
-                    <button class="radhey-popup-btn" onclick="closePopup()">Thank you!</button>
+                    <button class="radhey-popup-btn" onclick="closePopup()">
+                        <i class="fas fa-heart"></i> Thank you!
+                    </button>
                 </div>
             </div>
         `;
@@ -39,15 +44,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 0, 0, 0.7);
+                background: rgba(0, 0, 0, 0.8);
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 z-index: 9999;
                 opacity: 0;
                 pointer-events: none;
-                transition: opacity 0.3s ease;
-                backdrop-filter: blur(5px);
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
             }
             
             .radhey-popup.show {
@@ -56,15 +62,28 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             .radhey-popup-content {
-                background: #212121;
-                border-radius: 16px;
-                padding: 2rem;
-                max-width: 500px;
+                background: linear-gradient(135deg, #1e1e2e, #2a2a3e);
+                border-radius: 20px;
+                padding: 2.5rem;
+                max-width: 520px;
                 width: 90%;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                transform: scale(0.8);
-                transition: transform 0.3s ease;
+                box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                transform: scale(0.8) translateY(20px);
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                position: relative;
+                overflow: hidden;
+            }
+
+            .radhey-popup-content::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: ${popupConfig.color};
+                border-radius: 20px 20px 0 0;
             }
             
             .radhey-popup.show .radhey-popup-content {
@@ -75,18 +94,47 @@ document.addEventListener('DOMContentLoaded', function() {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin-bottom: 1rem;
-                padding-bottom: 1rem;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                margin-bottom: 1.5rem;
+                padding-bottom: 1.5rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                position: relative;
             }
-            
-            .radhey-popup-header i {
-                font-size: 2rem;
+
+            .radhey-icon-wrapper {
+                width: 50px;
+                height: 50px;
+                border-radius: 12px;
                 background: ${popupConfig.color};
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                margin-right: 0.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 1rem;
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+                position: relative;
+                overflow: hidden;
+            }
+
+            .radhey-icon-wrapper::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+                transform: rotate(45deg);
+                transition: all 0.6s ease;
+            }
+
+            .radhey-icon-wrapper:hover::before {
+                transform: rotate(45deg) translateX(100%);
+            }
+
+            .radhey-popup-header i {
+                font-size: 1.5rem;
+                color: white;
+                position: relative;
+                z-index: 1;
             }
             
             .radhey-popup-header h3 {
@@ -140,18 +188,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 background: ${popupConfig.color};
                 color: white;
                 border: none;
-                padding: 0.75rem 1.5rem;
-                border-radius: 8px;
+                padding: 0.875rem 2rem;
+                border-radius: 12px;
                 cursor: pointer;
                 font-size: 1rem;
                 font-weight: 600;
-                transition: all 0.3s ease;
-                box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+                transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                position: relative;
+                overflow: hidden;
             }
-            
+
+            .radhey-popup-btn::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+                transition: left 0.5s ease;
+            }
+
+            .radhey-popup-btn:hover::before {
+                left: 100%;
+            }
+
             .radhey-popup-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+                transform: translateY(-3px);
+                box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+            }
+
+            .radhey-popup-btn:active {
+                transform: translateY(-1px);
             }
             
             /* Animation */
@@ -257,24 +329,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Show popup after random delay
+    // Show popup once after login (short delay)
     setTimeout(showPopup, popupConfig.delay);
 
-    // Also show on certain events (like page idle)
-    let idleTime = 0;
-    const idleInterval = setInterval(() => {
-        idleTime++;
-        if (idleTime > 30) { // 30 seconds idle
-            const popup = document.querySelector('.radhey-popup');
-            if (!popup || !popup.classList.contains('show')) {
-                showPopup();
-            }
-            idleTime = 0;
+    // Show popup every 30 minutes
+    setInterval(() => {
+        const popup = document.querySelector('.radhey-popup');
+        if (!popup || !popup.classList.contains('show')) {
+            showPopup();
         }
-    }, 1000);
-
-    // Reset idle time on activity
-    ['mousemove', 'keypress', 'click', 'scroll'].forEach(event => {
-        document.addEventListener(event, () => idleTime = 0);
-    });
+    }, popupConfig.repeatInterval);
 });

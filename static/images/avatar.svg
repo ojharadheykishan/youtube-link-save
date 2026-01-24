@@ -1,0 +1,41 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="avatarBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="faceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fdbcb4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f4a688;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer circle -->
+  <circle cx="60" cy="60" r="58" fill="url(#avatarBg)" stroke="#fff" stroke-width="2"/>
+
+  <!-- Face -->
+  <circle cx="60" cy="55" r="35" fill="url(#faceGradient)"/>
+
+  <!-- Eyes -->
+  <circle cx="48" cy="48" r="4" fill="#2d3748"/>
+  <circle cx="72" cy="48" r="4" fill="#2d3748"/>
+  <circle cx="49" cy="46" r="1.5" fill="#fff"/>
+  <circle cx="73" cy="46" r="1.5" fill="#fff"/>
+
+  <!-- Nose -->
+  <ellipse cx="60" cy="55" rx="2" ry="3" fill="#e2a679"/>
+
+  <!-- Mouth -->
+  <path d="M 50 65 Q 60 72 70 65" stroke="#2d3748" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- Hair -->
+  <path d="M 30 35 Q 25 25 35 30 Q 45 20 55 25 Q 65 20 75 25 Q 85 20 90 30 Q 95 40 85 35 Q 75 30 65 35 Q 55 30 45 35 Q 35 30 30 35 Z" fill="#2d3748"/>
+
+  <!-- Turban/Head covering (Indian style) -->
+  <path d="M 25 40 Q 20 35 30 30 Q 45 25 60 28 Q 75 25 90 30 Q 100 35 95 40 Q 85 35 75 38 Q 60 35 45 38 Q 35 35 25 40 Z" fill="#ff6b35"/>
+  <circle cx="60" cy="32" r="3" fill="#ffd700"/>
+
+  <!-- Subtle shadow -->
+  <ellipse cx="60" cy="110" rx="45" ry="8" fill="rgba(0,0,0,0.1)"/>
+</svg>

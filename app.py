@@ -102,9 +102,9 @@ async def logout_get(response: Response):
 
 @app.post("/logout")
 async def logout_post(response: Response):
-    # Redirect to login page with proper 303 status to ensure GET request
+    # Redirect to start page with proper 303 status to ensure GET request
     from starlette.responses import RedirectResponse
-    response = RedirectResponse(url="/login", status_code=303)
+    response = RedirectResponse(url="/start", status_code=303)
     response.delete_cookie("auth_token")
     return response
 
@@ -183,19 +183,21 @@ def save_playlist_db(db):
 async def extract_playlist_videos(playlist_url, username=None):
     """Extract all videos from a YouTube playlist"""
     try:
+        # Try with different options to extract playlist
         ydl_opts = {
             'quiet': True,
             'no_warnings': True,
-            'extract_flat': True,  # Don't download, just extract info
+            'extract_flat': 'in_playlist',  # Extract flat info for playlists
+            'playlist_items': '1:100',  # Get first 100 videos
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(playlist_url, download=False)
 
-            if 'entries' in info:
+            if 'entries' in info and info['entries']:
                 videos = []
                 for entry in info['entries']:
-                    if entry:
+                    if entry and entry.get('id'):
                         video_info = {
                             'video_id': entry.get('id'),
                             'title': entry.get('title', 'Unknown Title'),
@@ -207,6 +209,37 @@ async def extract_playlist_videos(playlist_url, username=None):
                         }
                         videos.append(video_info)
                 return videos
+            else:
+                print(f"No entries found in playlist info. Available keys: {list(info.keys()) if isinstance(info, dict) else 'Not a dict'}")
+                # Try alternative approach for single video URLs with list parameter
+                if 'list=' in playlist_url and 'watch?v=' in playlist_url:
+                    print("Detected single video with playlist parameter, trying to extract playlist info...")
+                    # Extract playlist ID and try to get playlist info
+                    import re
+                    list_match = re.search(r'list=([A-Za-z0-9_-]+)', playlist_url)
+                    if list_match:
+                        playlist_id = list_match.group(1)
+                        try:
+                            playlist_url_clean = f"https://www.youtube.com/playlist?list={playlist_id}"
+                            info = ydl.extract_info(playlist_url_clean, download=False)
+                            if 'entries' in info and info['entries']:
+                                videos = []
+                                for entry in info['entries'][:10]:  # Limit to first 10
+                                    if entry and entry.get('id'):
+                                        video_info = {
+                                            'video_id': entry.get('id'),
+                                            'title': entry.get('title', 'Unknown Title'),
+                                            'url': f"https://www.youtube.com/watch?v={entry.get('id')}",
+                                            'duration': entry.get('duration', 0),
+                                            'uploader': entry.get('uploader', 'Unknown'),
+                                            'playlist_id': playlist_id,
+                                            'playlist_title': info.get('title', 'Unknown Playlist')
+                                        }
+                                        videos.append(video_info)
+                                return videos
+                        except Exception as e2:
+                            print(f"Alternative playlist extraction failed: {e2}")
+                return []
     except Exception as e:
         print(f"Error extracting playlist: {e}")
         return []
@@ -271,8 +304,8 @@ async def add_playlist(playlist_url, folder_name, username, monitor=False):
     """Add entire playlist with option to monitor for updates"""
     videos = await extract_playlist_videos(playlist_url)
 
-    if not videos:
-        return {"error": "Could not extract videos from playlist"}
+    if not videos or len(videos) == 0:
+        return {"error": "Could not extract videos from playlist. Please check if the playlist URL is valid and public."}
 
     db = load_db()
     playlist_db = load_playlist_db()
@@ -314,10 +347,15 @@ async def add_playlist(playlist_url, folder_name, username, monitor=False):
         save_playlist_db(playlist_db)
 
     # Add all videos
+    print(f"Database before adding: {list(db.keys())}")
+    
     for video in videos:
-        video_id = f"{video['video_id']}_playlist_{playlist_id}"
+        # Use simpler video_id format to avoid duplicates
+        video_id = f"{video['video_id']}_{playlist_id}"
 
+        print(f"Processing video: {video.get('title', 'Unknown')} with ID: {video_id}")
         if video_id not in db:
+            print(f"Adding video {video_id} to database")
             # For now, don't download locally due to YouTube restrictions
             # Just add for streaming - local download can be added later with proper cookies
             db[video_id] = {
@@ -337,6 +375,11 @@ async def add_playlist(playlist_url, folder_name, username, monitor=False):
                 'user_id': username
             }
             added_count += 1
+            print(f"Successfully added video {video_id}, total added: {added_count}")
+        else:
+            print(f"Video {video_id} already exists in database")
+    
+    print(f"Database after adding: {list(db.keys())}")
 
     save_db(db)
     return {
@@ -1452,6 +1495,41 @@ async def get_all_videos(auth_token: str = Cookie(None)):
 
     return {"videos": videos}
 
+@app.delete("/api/videos/{video_id}/delete")
+async def delete_video(video_id: str, auth_token: str = Cookie(None)):
+    # Verify user access
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+    db = load_db()
+    
+    if video_id not in db:
+        raise HTTPException(status_code=404, detail="Video not found")
+
+    # Check if video belongs to user
+    video_data = db[video_id]
+    if video_data.get("user_id") != username:
+        raise HTTPException(status_code=403, detail="Access denied - video belongs to another user")
+
+    # Delete video thumbnail if exists
+    thumbnail_path = video_data.get("thumbnail_path")
+    if thumbnail_path and os.path.exists(thumbnail_path):
+        try:
+            os.remove(thumbnail_path)
+        except:
+            pass
+
+    del db[video_id]
+    save_db(db)
+
+    return {"message": "Video deleted successfully"}
+
 @app.delete("/api/admin/videos/{video_id}/delete")
 async def delete_video_admin(video_id: str, auth_token: str = Cookie(None)):
     # Verify admin access
@@ -1795,16 +1873,23 @@ async def add_playlist_endpoint(
         from auth import verify_token
         username = verify_token(auth_token)
 
-        # Validate playlist URL
-        if 'youtube.com/playlist' not in playlist_url and 'youtu.be' not in playlist_url:
-            raise HTTPException(status_code=400, detail="Invalid playlist URL")
+        # Validate playlist URL - accept various YouTube playlist URL formats
+        is_youtube_playlist = 'youtube.com' in playlist_url and 'list=' in playlist_url
+        is_youtu_be = 'youtu.be' in playlist_url
 
-        # Queue background task for playlist processing
-        background_tasks.add_task(add_playlist, playlist_url, folder_name, username, monitor)
+        if not (is_youtube_playlist or is_youtu_be):
+            raise HTTPException(status_code=400, detail="Invalid playlist URL. Please provide a valid YouTube playlist URL (e.g., https://www.youtube.com/playlist?list=... or https://www.youtube.com/watch?v=...&list=...)")
+
+        # Process playlist synchronously
+        result = await add_playlist(playlist_url, folder_name, username, monitor)
+
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
 
         return {
-            "message": "Playlist processing started. Videos will be downloaded and added shortly.",
-            "monitor": monitor
+            "message": result["message"],
+            "playlist_id": result.get("playlist_id"),
+            "total_videos": result.get("total_videos", 0)
         }
 
     except Exception as e:

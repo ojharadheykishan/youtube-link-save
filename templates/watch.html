@@ -307,7 +307,7 @@
     </div>
 
     <script>
-        const videoId = "{{ video.original_video_id or video.video_id }}";
+        const videoId = "{{ video.video_id }}";
         const sourceUrl = "{{ video.url or video.source_url }}";
         const hasLocalVideo = {{ 'true' if video.local_path else 'false' }};
         const username = "{{ video.user_id or video.username or '' }}";

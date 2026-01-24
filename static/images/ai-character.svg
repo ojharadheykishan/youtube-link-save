@@ -1,0 +1,103 @@
+<svg width="150" height="180" viewBox="0 0 150 180" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <!-- Traditional Rajasthani Colors -->
+        <linearGradient id="skin" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f4a688"/>
+            <stop offset="100%" style="stop-color:#e67e22"/>
+        </linearGradient>
+        
+        <linearGradient id="pagri" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#dc3545"/>
+            <stop offset="100%" style="stop-color:#c82333"/>
+        </linearGradient>
+        
+        <linearGradient id="angrakha" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#28a745"/>
+            <stop offset="50%" style="stop-color:#218838"/>
+            <stop offset="100%" style="stop-color:#1e7e34"/>
+        </linearGradient>
+        
+        <linearGradient id="dhoti" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#007bff"/>
+            <stop offset="100%" style="stop-color:#0069d9"/>
+        </linearGradient>
+        
+        <linearGradient id="bindi" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffd700"/>
+            <stop offset="100%" style="stop-color:#ffc107"/>
+        </linearGradient>
+        
+        <filter id="shadow">
+            <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+        </filter>
+    </defs>
+    
+    <!-- Base Shadow -->
+    <ellipse cx="75" cy="175" rx="60" ry="8" fill="rgba(0,0,0,0.2)" filter="url(#shadow)"/>
+    
+    <!-- Main Body -->
+    <!-- Dhoti (Lower Garment) -->
+    <path d="M 40 120 Q 35 130 45 145 Q 60 160 75 165 Q 90 160 105 145 Q 115 130 110 120 L 110 90 Q 105 85 100 85 L 50 85 Q 45 85 40 90 Z" 
+          fill="url(#dhoti)" filter="url(#shadow)"/>
+    
+    <!-- Angrakha (Upper Garment) -->
+    <path d="M 35 90 Q 30 80 45 75 Q 60 70 75 72 Q 90 70 105 75 Q 120 80 115 90 L 110 120 Q 105 125 100 125 L 50 125 Q 45 125 40 120 Z" 
+          fill="url(#angrakha)" filter="url(#shadow)"/>
+    
+    <!-- Angrakha Details -->
+    <path d="M 35 90 Q 50 80 75 85 Q 100 80 115 90" stroke="white" stroke-width="2" fill="none" opacity="0.3"/>
+    <circle cx="75" cy="85" r="2" fill="white" opacity="0.4"/>
+    <circle cx="65" cy="95" r="1.5" fill="white" opacity="0.3"/>
+    <circle cx="85" cy="95" r="1.5" fill="white" opacity="0.3"/>
+    
+    <!-- Pagri (Turban) -->
+    <path d="M 50 40 Q 40 20 55 15 Q 70 10 85 15 Q 100 20 90 40 Q 85 35 80 45 Q 75 35 70 45 Q 65 35 60 40 Z" 
+          fill="url(#pagri)" filter="url(#shadow)"/>
+    
+    <!-- Pagri Decoration -->
+    <circle cx="75" cy="25" r="3" fill="url(#bindi)"/>
+    <path d="M 75 25 Q 80 28 85 25 Q 80 22 75 25" stroke="white" stroke-width="1" fill="none"/>
+    
+    <!-- Face -->
+    <circle cx="75" cy="60" r="25" fill="url(#skin)" filter="url(#shadow)"/>
+    
+    <!-- Eyes -->
+    <ellipse cx="68" cy="58" rx="3" ry="2" fill="white"/>
+    <ellipse cx="82" cy="58" rx="3" ry="2" fill="white"/>
+    <circle cx="68" cy="58" r="1.5" fill="#2d3748"/>
+    <circle cx="82" cy="58" r="1.5" fill="#2d3748"/>
+    
+    <!-- Bindi -->
+    <circle cx="75" cy="50" r="1.5" fill="url(#bindi)"/>
+    
+    <!-- Nose -->
+    <path d="M 75 60 L 72 63 L 78 63 Z" fill="#d63031"/>
+    
+    <!-- Mouth -->
+    <path d="M 68 68 Q 75 72 82 68" stroke="#2d3748" stroke-width="1.5" fill="none"/>
+    
+    <!-- Beard -->
+    <path d="M 60 70 Q 75 75 90 70 L 88 75 Q 75 80 62 75 Z" fill="#2d3748" opacity="0.7"/>
+    
+    <!-- Arms (Namaste Pose) -->
+    <path d="M 55 95 Q 40 100 35 110 L 40 115 Q 50 105 55 95 Z" fill="url(#skin)" filter="url(#shadow)"/>
+    <path d="M 95 95 Q 110 100 115 110 L 110 115 Q 100 105 95 95 Z" fill="url(#skin)" filter="url(#shadow)"/>
+    
+    <!-- Hands in Namaste -->
+    <path d="M 70 100 Q 68 98 70 96 Q 72 98 70 100" fill="url(#skin)" filter="url(#shadow)"/>
+    <path d="M 80 100 Q 82 98 80 96 Q 78 98 80 100" fill="url(#skin)" filter="url(#shadow)"/>
+    
+    <!-- Traditional Moustache -->
+    <path d="M 65 65 Q 75 63 85 65" stroke="#2d3748" stroke-width="2" fill="none" stroke-linecap="round"/>
+    
+    <!-- Anklet -->
+    <path d="M 45 165 Q 48 168 52 165 Q 55 162 52 165" stroke="white" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M 105 165 Q 108 168 112 165 Q 115 162 112 165" stroke="white" stroke-width="1.5" fill="none" opacity="0.6"/>
+    
+    <!-- Traditional Bangle -->
+    <path d="M 40 110 Q 43 108 46 110 Q 49 112 46 110" stroke="url(#bindi)" stroke-width="1" fill="none"/>
+    <path d="M 110 110 Q 113 108 116 110 Q 119 112 116 110" stroke="url(#bindi)" stroke-width="1" fill="none"/>
+    
+    <!-- Background Glow -->
+    <ellipse cx="75" cy="90" rx="80" ry="60" fill="url(#pagri)" opacity="0.1" filter="url(#shadow)"/>
+</svg>
