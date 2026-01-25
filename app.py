@@ -1530,36 +1530,41 @@ async def delete_video(video_id: str, auth_token: str = Cookie(None)):
 
     return {"message": "Video deleted successfully"}
 
-@app.delete("/api/admin/videos/{video_id}/delete")
-async def delete_video_admin(video_id: str, auth_token: str = Cookie(None)):
-    # Verify admin access
+@app.post("/api/delete_video")
+async def delete_video_post(video_id: str = Form(...), auth_token: str = Cookie(None)):
+    """Delete a video (POST method for compatibility with frontend)"""
+    # Verify user access
     if not auth_token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-
+    
     try:
-        from auth import verify_token, load_users
+        from auth import verify_token
         username = verify_token(auth_token)
-        users = load_users()
-        user = users.get(username)
-
-        if not user or user.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="Admin access required")
-
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid authentication")
-
+    
     db = load_db()
     
     if video_id not in db:
         raise HTTPException(status_code=404, detail="Video not found")
-
-    # Delete video thumbnail if exists
+    
+    # Check if video belongs to user
     video_data = db[video_id]
+    if video_data.get("user_id") != username:
+        raise HTTPException(status_code=403, detail="Access denied - video belongs to another user")
+    
+    # Delete video thumbnail if exists
     thumbnail_path = video_data.get("thumbnail_path")
     if thumbnail_path and os.path.exists(thumbnail_path):
         try:
             os.remove(thumbnail_path)
         except:
+            pass
+    
+    del db[video_id]
+    save_db(db)
+    
+    return {"message": "Video deleted successfully"}
             pass
 
     del db[video_id]
