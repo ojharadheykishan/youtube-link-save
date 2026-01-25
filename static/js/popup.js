@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             .radhey-popup-content {
-                background: linear-gradient(135deg, #1e1e2e, #2a2a3e);
+                background: linear-gradient(135deg, #711858, #2a2a3e);
                 border-radius: 20px;
                 padding: 2.5rem;
                 max-width: 520px;
@@ -329,14 +329,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Show popup once after login (short delay)
-    setTimeout(showPopup, popupConfig.delay);
-
-    // Show popup every 30 minutes
-    setInterval(() => {
-        const popup = document.querySelector('.radhey-popup');
-        if (!popup || !popup.classList.contains('show')) {
-            showPopup();
+    // Check if popup should be shown
+    window.shouldShowPopup = function() {
+        const lastShown = localStorage.getItem('radheyPopupLastShown');
+        const now = Date.now();
+        
+        // If never shown before, show it
+        if (!lastShown) {
+            return true;
         }
-    }, popupConfig.repeatInterval);
+        
+        // Show again only if repeat interval has passed
+        const timeSinceLastShown = now - parseInt(lastShown);
+        return timeSinceLastShown >= popupConfig.repeatInterval;
+    };
+    
+    // Show popup if needed
+    window.checkAndShowPopup = function() {
+        if (window.shouldShowPopup()) {
+            setTimeout(() => {
+                showPopup();
+                localStorage.setItem('radheyPopupLastShown', Date.now().toString());
+            }, popupConfig.delay);
+        }
+    };
+    
+    // Clear popup localStorage (for debugging)
+    window.clearPopupLocalStorage = function() {
+        localStorage.removeItem('radheyPopupLastShown');
+    };
+    
+    // Check on page load
+    window.checkAndShowPopup();
+    
+    // Check periodically
+    setInterval(window.checkAndShowPopup, popupConfig.repeatInterval);
 });

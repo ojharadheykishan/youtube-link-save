@@ -969,7 +969,8 @@
 
             fetch('/add_video', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                credentials: 'include'
             })
             .then(response => response.json())
             .then(data => {
@@ -1040,7 +1041,8 @@
 
                 const response = await fetch('/add_video', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
@@ -1086,7 +1088,8 @@
 
                 const response = await fetch('/api/add_playlist', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'include'
                 });
 
                 const result = await response.json();

@@ -307,7 +307,10 @@
     </div>
 
     <script>
-        const videoId = "{{ video.video_id }}";
+        // For YouTube embed and thumbnail - use original video ID
+        const youtubeVideoId = "{{ video.original_video_id or (video.video_id.split('_')[0] if '_' in video.video_id else video.video_id) }}";
+        // For database operations - use full video ID
+        const databaseVideoId = "{{ video.video_id }}";
         const sourceUrl = "{{ video.url or video.source_url }}";
         const hasLocalVideo = {{ 'true' if video.local_path else 'false' }};
         const username = "{{ video.user_id or video.username or '' }}";
@@ -435,7 +438,7 @@
                 ytPlayer = new YT.Player(ytPlayerContainer, {
                     height: '100%',
                     width: '100%',
-                    videoId: videoId,
+                    videoId: youtubeVideoId,
                     playerVars: {
                         autoplay: 0,
                         controls: 1,
@@ -602,9 +605,9 @@
             try {
                 // Use server proxy for streaming - MORE RELIABLE
                 console.log('🔄 Using server proxy for streaming...');
-                console.log(`📍 Calling: /api/proxy_stream/${videoId}`);
+                console.log(`📍 Calling: /api/proxy_stream/${databaseVideoId}`);
                 
-                const proxyUrl = `/api/proxy_stream/${videoId}`;
+                const proxyUrl = `/api/proxy_stream/${databaseVideoId}`;
                 console.log('Proxy URL:', proxyUrl);
                 
                 // Set video source to proxy URL
@@ -652,7 +655,7 @@
             showNotification('⬇️ Preparing download... Opening in new tab');
             
             try {
-                const response = await fetch(`/api/stream/${videoId}`, {
+                const response = await fetch(`/api/stream/${databaseVideoId}`, {
                     method: 'GET',
                     credentials: 'include'
                 });
@@ -691,8 +694,8 @@
             } else {
                 console.log('🔄 No local video, checking stream availability...');
                 try {
-                    console.log(`📍 Checking stream availability for video: ${videoId}`);
-                    const response = await fetch(`/api/stream/${videoId}`, {
+                    console.log(`📍 Checking stream availability for video: ${databaseVideoId}`);
+                    const response = await fetch(`/api/stream/${databaseVideoId}`, {
                         method: 'GET',
                         credentials: 'include'
                     });
