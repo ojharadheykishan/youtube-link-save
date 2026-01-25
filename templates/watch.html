@@ -311,6 +311,7 @@
         const youtubeVideoId = "{{ video.original_video_id or (video.video_id.split('_')[0] if '_' in video.video_id else video.video_id) }}";
         // For database operations - use full video ID
         const databaseVideoId = "{{ video.video_id }}";
+        const videoId = databaseVideoId; // Define videoId for consistency
         const sourceUrl = "{{ video.url or video.source_url }}";
         const hasLocalVideo = {{ 'true' if video.local_path else 'false' }};
         const username = "{{ video.user_id or video.username or '' }}";
