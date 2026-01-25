@@ -1565,12 +1565,6 @@ async def delete_video_post(video_id: str = Form(...), auth_token: str = Cookie(
     save_db(db)
     
     return {"message": "Video deleted successfully"}
-            pass
-
-    del db[video_id]
-    save_db(db)
-
-    return {"message": f"Video {video_id} deleted successfully"}
 
 @app.get("/api/admin/settings")
 async def get_admin_settings(auth_token: str = Cookie(None)):
