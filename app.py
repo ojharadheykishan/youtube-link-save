@@ -1242,7 +1242,8 @@ async def delete_folder(folder_name: str = Form(...), auth_token: str = Cookie(N
 
     # Remove all user's videos in the folder
     videos_to_delete = [video_id for video_id, video in db.items()
-                       if video.get('user_id') == username and video.get('folder_name') == folder_name]
+                       if video.get('user_id') == username and 
+                       (video.get('folder_name') == folder_name or video.get('folder_path') == folder_name)]
 
     for video_id in videos_to_delete:
         del db[video_id]

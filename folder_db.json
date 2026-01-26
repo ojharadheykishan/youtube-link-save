@@ -3,6 +3,7 @@
     "name": "Algebra",
     "path": "Test/Algebra",
     "parent_path": "Test",
+    "user_id": "admin",
     "created_time": "2026-01-20T15:45:59.598859"
   },
   "Mcq": {
@@ -11,13 +12,6 @@
     "parent_path": "",
     "user_id": "admin",
     "created_time": "2026-01-23T08:00:18.881558"
-  },
-  "test": {
-    "name": "test",
-    "path": "test",
-    "parent_path": "",
-    "user_id": null,
-    "created_time": "2026-01-24T04:47:12.331418"
   },
   "current": {
     "name": "current",

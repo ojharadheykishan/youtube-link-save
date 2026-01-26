@@ -10,7 +10,8 @@
     "duration": 0,
     "file_size": 0,
     "added_time": "2026-01-20T15:58:53.834236",
-    "views_count": 6
+    "views_count": 6,
+    "user_id": "admin"
   },
   "LJ2pcj8eia8_playlist_PLoZP2WsNfBSEtS6IgMV6MRDPwiWOnC2Rp": {
     "video_id": "LJ2pcj8eia8_playlist_PLoZP2WsNfBSEtS6IgMV6MRDPwiWOnC2Rp",
@@ -22,7 +23,7 @@
     "duration": 3260,
     "uploader": "Utkarsh Classes",
     "added_time": "2026-01-23T04:42:19.736949",
-    "views_count": 2,
+    "views_count": 3,
     "source_type": "youtube_playlist",
     "playlist_id": "PLoZP2WsNfBSEtS6IgMV6MRDPwiWOnC2Rp",
     "user_id": "admin"
@@ -882,5 +883,20 @@
     "source_type": "youtube_playlist",
     "playlist_id": "PLoZP2WsNfBSEtS6IgMV6MRDPwiWOnC2Rp",
     "user_id": null
+  },
+  "faAx_LQmD_8_playlist_PLbmKHoPJdhKZqYiylHRJ7YxXRDEx1GjRY": {
+    "video_id": "faAx_LQmD_8_playlist_PLbmKHoPJdhKZqYiylHRJ7YxXRDEx1GjRY",
+    "original_video_id": "faAx_LQmD_8",
+    "title": "26 JANUARY 2026 Rajasthan current Affairs in Hindi | \u0938\u0941\u091c\u0938 Report | RPSC, RSSB | NANAK CLASSES",
+    "url": "https://www.youtube.com/watch?v=faAx_LQmD_8",
+    "local_path": null,
+    "folder_name": "current",
+    "duration": 1314,
+    "uploader": "NANAK CLASSES",
+    "added_time": "2026-01-26T04:26:31.590458",
+    "views_count": 0,
+    "source_type": "youtube_playlist_auto",
+    "playlist_id": "PLbmKHoPJdhKZqYiylHRJ7YxXRDEx1GjRY",
+    "username": "admin"
   }
 }
