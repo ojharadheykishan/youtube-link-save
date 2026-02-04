@@ -1,0 +1,117 @@
+<parameter name="content"># Telegram Routes Extension for VideoHub
+# Add these routes to your app.py file
+
+# Add this after the dashboard route in app.py
+
+@app.get("/telegram", response_class=HTMLResponse)
+async def telegram_page(request: Request, channel: str = None, auth_token: str = Cookie(None)):
+    """Telegram channel videos page"""
+    # Check if user is authenticated
+    if not auth_token:
+        return RedirectResponse("/login", status_code=302)
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        if username not in users:
+            return RedirectResponse("/login", status_code=302)
+        user = users[username]
+    except Exception:
+        return RedirectResponse("/login", status_code=302)
+
+    return templates.TemplateResponse("telegram.html", {
+        "request": request,
+        "current_user": user,
+        "channel": channel or "@Rk_Movie096"
+    })
+
+
+@app.get("/api/telegram/channel/{channel_name}")
+async def get_channel_videos(channel_name: str, auth_token: str = Cookie(None)):
+    """Get videos from a Telegram channel"""
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+
+    # Return channel videos from cache
+    try:
+        import config
+        cache_file = config.VIDEO_CACHE_FILE
+        if os.path.exists(cache_file):
+            with open(cache_file, 'r') as f:
+                cache_data = json.load(f)
+                
+                # Find matching channel
+                for channel_key, channel_data in cache_data.items():
+                    if channel_name.lower() in channel_key.lower() or channel_data.get('channel_name', '').lower() == channel_name.lower().replace('@', ''):
+                        return {
+                            "channel": channel_data.get('channel_name'),
+                            "link": channel_data.get('channel_link'),
+                            "videos": channel_data.get('videos', [])
+                        }
+        
+        # Return sample data if no cache
+        return {
+            "channel": channel_name,
+            "link": f"https://t.me/{channel_name.replace('@', '')}",
+            "videos": [],
+            "message": "No cached videos found. Please sync the channel first."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/telegram/sync-channel")
+async def sync_telegram_channel_endpoint(
+    channel: str = Form(...),
+    background_tasks: BackgroundTasks = None,
+    auth_token: str = Cookie(None)
+):
+    """Sync videos from a Telegram channel"""
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+
+    if not TELEGRAM_AVAILABLE:
+        return {
+            "status": "demo",
+            "message": "Telegram API not configured. Using demo mode.",
+            "channel": channel
+        }
+
+    try:
+        # Queue background sync
+        if background_tasks:
+            background_tasks.add_task(fetch_and_store_telegram_videos, channel, username)
+        
+        return {
+            "status": "started",
+            "message": f"Syncing videos from {channel}",
+            "channel": channel
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# Add this JavaScript function to your templates/index.html header section
+# to add the Telegram button:
+
+TELEGRAM_BUTTON_HTML = '''
+<button class="btn-icon" title="Telegram Channel" onclick="window.location.href='/telegram'" style="background: rgba(0, 136, 204, 0.2); color: #0088cc;">
+    <i class="fab fa-telegram"></i>
+</button>
+'''
+
+# Example: Add this button after the Dashboard button in index.html header
+</parameter>

@@ -1079,6 +1079,38 @@ async def get_telegram_videos():
         pass
     return {}
 
+@app.delete("/delete_video/{video_id}")
+async def delete_video(video_id: str, auth_token: str = Cookie(None)):
+    """Delete a video from the database"""
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        if username not in users:
+            raise HTTPException(status_code=401, detail="User not found")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+    db = load_db()
+    
+    if video_id not in db:
+        raise HTTPException(status_code=404, detail="Video not found")
+
+    video = db[video_id]
+    
+    # Check if video belongs to the user
+    if video.get('user_id') != username:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # Delete video from database
+    del db[video_id]
+    save_db(db)
+
+    return {"message": "Video deleted successfully"}
+
 @app.get("/api/telegram/settings")
 async def get_telegram_settings(auth_token: str = Cookie(None)):
     """Get current user's Telegram settings"""

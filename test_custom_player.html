@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Player Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            margin-bottom: 20px;
+        }
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #ee5a24;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #4CAF50;
+        }
+        .error {
+            background: #f44336;
+        }
+        .info {
+            background: #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Custom Player Test</h1>
+        
+        <div class="test-section">
+            <h2>1. Video Player Container</h2>
+            <div class="video-container" id="html5PlayerContainer" style="display: block;">
+                <video id="html5Player" controls>
+                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Player Controls</h2>
+            <button class="btn" onclick="initPlayer()">Initialize Player</button>
+            <button class="btn" onclick="testControls()">Test Controls</button>
+            <button class="btn" onclick="testPlayback()">Test Playback</button>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Status</h2>
+            <div id="status" class="status info">
+                <p>Status: Ready to initialize</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Console Output</h2>
+            <pre id="console" style="background: #000; padding: 10px; border-radius: 5px; height: 200px; overflow: auto; font-size: 12px;"></pre>
+        </div>
+    </div>
+
+    <!-- Include custom player script -->
+    <script src="/static/js/custom-player.js"></script>
+    
+    <script>
+        // Console logger
+        const consoleOutput = document.getElementById('console');
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog(...args);
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] LOG: ${args.join(' ')}`;
+            logEntry.style.color = '#00ff00';
+            consoleOutput.appendChild(logEntry);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+        
+        console.error = function(...args) {
+            originalError(...args);
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ERROR: ${args.join(' ')}`;
+            logEntry.style.color = '#ff0000';
+            consoleOutput.appendChild(logEntry);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+
+        // Test functions
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = `<p>Status: ${message}</p>`;
+        }
+
+        function initPlayer() {
+            updateStatus('Initializing custom player...', 'info');
+            
+            try {
+                const result = initCustomPlayer();
+                if (result) {
+                    updateStatus('Player initialized successfully!', 'success');
+                } else {
+                    updateStatus('Player not initialized (already initialized or video not found)', 'error');
+                }
+            } catch (error) {
+                updateStatus(`Error initializing player: ${error.message}`, 'error');
+                console.error('Initialization error:', error);
+            }
+        }
+
+        function testControls() {
+            updateStatus('Testing player controls...', 'info');
+            
+            try {
+                if (window.customPlayer) {
+                    updateStatus('Player controls available!', 'success');
+                    console.log('Player instance:', window.customPlayer);
+                    console.log('Video element:', window.customPlayer.video);
+                    console.log('Controls container:', window.customPlayer.controls);
+                    
+                    // Test some basic operations
+                    const playBtn = document.querySelector('.play-btn');
+                    const volumeBtn = document.querySelector('.volume-btn');
+                    const speedBtn = document.querySelector('.speed-btn');
+                    
+                    console.log('Play button:', playBtn);
+                    console.log('Volume button:', volumeBtn);
+                    console.log('Speed button:', speedBtn);
+                } else {
+                    updateStatus('Player not initialized. Call Initialize Player first.', 'error');
+                }
+            } catch (error) {
+                updateStatus(`Error testing controls: ${error.message}`, 'error');
+                console.error('Controls test error:', error);
+            }
+        }
+
+        function testPlayback() {
+            updateStatus('Testing video playback...', 'info');
+            
+            try {
+                const video = document.getElementById('html5Player');
+                if (video) {
+                    if (video.paused) {
+                        video.play();
+                        updateStatus('Video playing', 'success');
+                    } else {
+                        video.pause();
+                        updateStatus('Video paused', 'success');
+                    }
+                } else {
+                    updateStatus('Video element not found', 'error');
+                }
+            } catch (error) {
+                updateStatus(`Error testing playback: ${error.message}`, 'error');
+                console.error('Playback test error:', error);
+            }
+        }
+
+        // Auto-initialize on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('Page loaded, checking video element');
+                const video = document.getElementById('html5Player');
+                if (video) {
+                    console.log('Video element found');
+                    console.log('Container display:', getComputedStyle(document.getElementById('html5PlayerContainer')).display);
+                } else {
+                    console.error('Video element not found');
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>

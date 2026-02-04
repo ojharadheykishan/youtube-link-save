@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="/static/css/youtube.css">
     <link rel="stylesheet" href="/static/css/modern-section.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/static/images/ai-character.svg">
+    <meta name="theme-color" content="#ff0000">
+    <meta name="description" content="Your Personal Video Library - Save, organize, and watch YouTube videos">
     <style>
         /* Modern Animated Homepage Styles */
         .hero-section {
@@ -488,6 +492,10 @@
             <span style="color: var(--text-primary); margin-right: 1rem;">
                 Welcome, <strong>{{ current_user.username }}</strong>
             </span>
+<button class="btn-icon" title="Notifications" onclick="openNotificationsModal()">
+                <i class="fas fa-bell"></i>
+                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+            </button>
             <button class="btn-icon" title="Settings" onclick="openSettingsModal()">
                 <i class="fas fa-cog"></i>
             </button>
@@ -662,24 +670,26 @@
                 <div class="videos-grid" id="allVideosGrid">
                     {% if videos %}
                         {% for video in videos %}
-                            <a href="/watch/{{ video.video_id }}" class="video-card">
-                                <div class="video-thumbnail">
-                                    {% if video.local_path %}
-                                    <!-- Local video thumbnail -->
-                                    <img src="{% if 'thumbnails' in (video.thumbnail_path or '') %}{{ '/' + video.thumbnail_path }}{% else %}https://img.youtube.com/vi/{{ (video.original_video_id or video.video_id).split('_')[0] }}/maxresdefault.jpg{% endif %}" alt="{{ video.title }}" onerror="this.src='https://via.placeholder.com/300x180?text=Local+Video'">
-                                    {% else %}
-                                    <!-- YouTube video thumbnail -->
-                                    <img src="{% if 'thumbnails' in (video.thumbnail_path or '') %}{{ '/' + video.thumbnail_path }}{% else %}https://img.youtube.com/vi/{{ (video.original_video_id or video.video_id).split('_')[0] }}/maxresdefault.jpg{% endif %}" alt="{{ video.title }}" onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'">
-                                    {% endif %}
-                                    <div class="play-overlay">
-                                        <i class="fas fa-play"></i>
+                            <div class="video-card">
+                                <a href="/watch/{{ video.video_id }}" class="video-thumbnail-link">
+                                    <div class="video-thumbnail">
+                                        {% if video.local_path %}
+                                        <!-- Local video thumbnail -->
+                                        <img src="{% if 'thumbnails' in (video.thumbnail_path or '') %}{{ '/' + video.thumbnail_path }}{% else %}https://img.youtube.com/vi/{{ (video.original_video_id or video.video_id).split('_')[0] }}/maxresdefault.jpg{% endif %}" alt="{{ video.title }}" onerror="this.src='https://via.placeholder.com/300x180?text=Local+Video'">
+                                        {% else %}
+                                        <!-- YouTube video thumbnail -->
+                                        <img src="{% if 'thumbnails' in (video.thumbnail_path or '') %}{{ '/' + video.thumbnail_path }}{% else %}https://img.youtube.com/vi/{{ (video.original_video_id or video.video_id).split('_')[0] }}/maxresdefault.jpg{% endif %}" alt="{{ video.title }}" onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'">
+                                        {% endif %}
+                                        <div class="play-overlay">
+                                            <i class="fas fa-play"></i>
+                                        </div>
+                                        {% if video.local_path %}
+                                        <div class="local-badge">
+                                            <i class="fas fa-download"></i> Local
+                                        </div>
+                                        {% endif %}
                                     </div>
-                                    {% if video.local_path %}
-                                    <div class="local-badge">
-                                        <i class="fas fa-download"></i> Local
-                                    </div>
-                                    {% endif %}
-                                </div>
+                                </a>
                                 <div class="video-info">
                                     <div class="video-title">{{ video.title }}</div>
                                     <div class="video-meta">
@@ -701,8 +711,19 @@
                                         </span>
                                         {% endif %}
                                     </div>
+                                    <div class="video-actions">
+                                        <button class="action-btn play-btn" onclick="window.location.href='/watch/{{ video.video_id }}'" title="Play">
+                                            <i class="fas fa-play"></i> Play
+                                        </button>
+                                        <button class="action-btn like-btn" onclick="likeVideo('{{ video.video_id }}')" title="Like">
+                                            <i class="fas fa-heart"></i> Like
+                                        </button>
+                                        <button class="action-btn delete-btn" onclick="deleteVideo('{{ video.video_id }}')" title="Delete">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
                                 </div>
-                            </a>
+                            </div>
                         {% endfor %}
                     {% else %}
                         <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-secondary);">
@@ -839,6 +860,8 @@
         </div>
     </div>
 
+    <script src="/static/js/theme.js"></script>
+    <script src="/static/js/pwa.js"></script>
     <script>
         // Modern loading animation
         document.addEventListener('DOMContentLoaded', function() {
@@ -1400,6 +1423,30 @@
             localStorage.setItem('apiHash', apiHash);
             alert('✅ Settings saved! You can now sync Telegram videos.');
             closeSettingsModal();
+        }
+
+        function likeVideo(videoId) {
+            // This is a placeholder function - implement your like logic here
+            console.log('Liking video:', videoId);
+            alert('Like feature coming soon!');
+        }
+
+        function deleteVideo(videoId) {
+            if (confirm('Are you sure you want to delete this video?')) {
+                fetch(`/delete_video/${videoId}`, { method: 'DELETE' })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('✅ Video deleted successfully!');
+                            window.location.reload(); // Refresh the page to update the video list
+                        } else {
+                            alert('❌ Failed to delete video');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting video:', error);
+                        alert('❌ Failed to delete video');
+                    });
+            }
         }
 
         function logout() {

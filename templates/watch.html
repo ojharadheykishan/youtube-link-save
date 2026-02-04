@@ -188,8 +188,8 @@
                     <button class="btn-primary" onclick="useYouTubeEmbed()" style="flex: 1;">
                         <i class="fab fa-youtube"></i> YouTube Embed
                     </button>
-                    <button class="btn-secondary" onclick="useCustomPlayer()" style="flex: 1;">
-                        <i class="fas fa-play-circle"></i> Custom Player
+                    <button class="btn-secondary" onclick="toggleSpeedControl()" style="flex: 1;">
+                        <i class="fas fa-tachometer-alt"></i> Speed Control
                     </button>
                     <button class="btn-secondary" onclick="downloadAndPlay()" style="flex: 1;">
                         <i class="fas fa-download"></i> Download & Play
@@ -489,7 +489,7 @@
             console.log('Player state changed:', event.data);
         }
 
-        // Use YouTube Embed Player
+        // Use YouTube Embed Player with custom speed control
         function useYouTubeEmbed() {
             console.log('📺 Switching to YouTube Embed player...');
             html5PlayerContainer.style.display = 'none';
@@ -503,107 +503,102 @@
             } else {
                 loadingSpinner.style.display = 'none';
             }
-            showNotification('📺 YouTube Player activated');
+            showNotification('📺 YouTube Player activated with speed control support');
         }
 
-        // Use Custom HTML5 Player - IMPROVED VERSION with better error handling
-        async function useCustomPlayer() {
-            console.log('🎬 Switching to Custom HTML5 player...');
-            console.log('DEBUG INFO:', {
-                videoId: videoId,
-                username: username,
-                hasLocalVideo: hasLocalVideo,
-                sourceUrl: sourceUrl
+        // YouTube Player speed control
+        function setYouTubeSpeed(speed) {
+            if (ytPlayer && typeof ytPlayer.setPlaybackRate === 'function') {
+                ytPlayer.setPlaybackRate(speed);
+                showNotification(`⏱️ Speed set to ${speed}x`, 'info');
+            }
+        }
+
+        // Create speed control buttons
+        function createSpeedControlPanel() {
+            if (document.getElementById('speedControlPanel')) return;
+            
+            const panel = document.createElement('div');
+            panel.id = 'speedControlPanel';
+            panel.style.cssText = `
+                position: fixed;
+                top: 50%;
+                right: 20px;
+                transform: translateY(-50%);
+                background: rgba(0, 0, 0, 0.9);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+                padding: 10px;
+                z-index: 1000;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            `;
+            
+            const speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4];
+            speeds.forEach(speed => {
+                const button = document.createElement('button');
+                button.textContent = `${speed}x`;
+                button.style.cssText = `
+                    background: ${speed === 1 ? 'rgba(255, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: all 0.3s ease;
+                `;
+                button.onclick = () => setYouTubeSpeed(speed);
+                button.onmouseover = function() {
+                    this.style.background = speed === 1 ? 'rgba(255, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+                };
+                button.onmouseout = function() {
+                    this.style.background = speed === 1 ? 'rgba(255, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)';
+                };
+                panel.appendChild(button);
             });
             
-            loadingSpinner.style.display = 'flex';
-            youtubeEmbed.style.display = 'none';
-            ytErrorMessage.style.display = 'none';
-            html5PlayerContainer.style.display = 'block';
-            videoErrorOverlay.style.display = 'none';
-            
-            try {
-                // Check if local video exists
-                if (hasLocalVideo) {
-                    console.log('🎥 Loading local video...');
-                    const localVideoUrl = `/videos/${username}/${videoId}.mp4`;
-                    console.log('Local video URL:', localVideoUrl);
-                    
-                    // Test if local video is accessible
-                    try {
-                        const testResponse = await fetch(localVideoUrl, { method: 'HEAD' });
-                        if (!testResponse.ok) {
-                            throw new Error(`Local video returned ${testResponse.status}`);
-                        }
-                    } catch (e) {
-                        console.error('Local video not accessible:', e);
-                        showNotification('⚠️ Local video not accessible, trying stream...', 'error');
-                        // Fall through to stream attempt
-                    }
-                    
-                    videoSource.src = localVideoUrl;
-                    videoSource.type = 'video/mp4';
-                    html5Player.load();
-                    currentPlayer = 'custom';
-                    showNotification('✅ Custom Player - Loading local video');
-                    
-                    // Initialize custom player controls after video loads
-                    if (window.initCustomPlayer) {
-                        window.initCustomPlayer();
-                    } else if (window.CustomVideoPlayer) {
-                        setTimeout(() => {
-                            if (!window.customPlayer) {
-                                window.customPlayer = new window.CustomVideoPlayer('html5Player', 'html5PlayerContainer');
-                            }
-                        }, 100);
-                    }
-                    
-                    // Set timeout for local video load
-                    let localTimeout = setTimeout(() => {
-                        if (html5Player.readyState === 0) {
-                            console.warn('Local video load timeout');
-                            showNotification('⚠️ Local video slow to load, trying stream...', 'error');
-                            // Try stream instead
-                            loadCustomPlayerWithStream();
-                        }
-                    }, 15000);
-                    
-                    html5Player.addEventListener('loadeddata', () => {
-                        clearTimeout(localTimeout);
-                        console.log('✅ Local video loaded');
-                    }, { once: true });
-                    
-                    return;
-                }
-                
-                // Load via stream
-                loadCustomPlayerWithStream();
-                
-            } catch (error) {
-                console.error('❌ Error loading custom player:', error);
-                console.error('Error stack:', error.stack);
-                loadingSpinner.style.display = 'none';
-                
-                let errorMsg = error.message;
-                if (error.message.includes('404')) {
-                    errorMsg = 'Video not found in database (404)';
-                } else if (error.message.includes('401')) {
-                    errorMsg = 'Authentication failed (401)';
-                } else if (error.message.includes('403')) {
-                    errorMsg = 'Access denied - video belongs to different user (403)';
-                }
-                
-                showNotification('❌ Custom player failed: ' + errorMsg, 'error');
-                
-                // Try YouTube as fallback
-                console.log('🔄 Falling back to YouTube...');
-                setTimeout(() => useYouTubeEmbed(), 1000);
+            document.body.appendChild(panel);
+        }
+
+        // Show/hide speed control panel
+        function toggleSpeedControl() {
+            const panel = document.getElementById('speedControlPanel');
+            if (panel) {
+                panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+            } else {
+                createSpeedControlPanel();
             }
+        }
+
+        // Use Custom HTML5 Player - Now with YouTube fallback
+        async function useCustomPlayer() {
+            console.log('🎬 Custom player requested, switching to YouTube with custom controls...');
+            showNotification('⚠️ Custom player is not available. Using YouTube player with speed control...', 'error');
+            
+            // Directly use YouTube player with custom speed control
+            useYouTubeEmbed();
         }
 
         // Load custom player with stream via proxy
         async function loadCustomPlayerWithStream() {
             try {
+                // First check if stream is available and not restricted
+                const checkResponse = await fetch(`/api/stream/${databaseVideoId}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const checkData = await checkResponse.json();
+                
+                if (checkData.restricted || checkData.error && checkData.error.includes('YouTube access restricted')) {
+                    console.log('🚫 Video is restricted, falling back to YouTube embed...');
+                    showNotification(checkData.suggestion || 'This video requires YouTube sign-in or age verification. Using YouTube Embed.', 'error');
+                    useYouTubeEmbed();
+                    return;
+                }
+                
                 // Use server proxy for streaming - MORE RELIABLE
                 console.log('🔄 Using server proxy for streaming...');
                 console.log(`📍 Calling: /api/proxy_stream/${databaseVideoId}`);
@@ -712,11 +707,16 @@
                     const data = await response.json();
                     console.log('📥 Stream availability data:', data);
                     
-                    if (data.stream_url && data.stream_url !== 'null' && data.stream_url !== '') {
+                    if (data.restricted || data.error && data.error.includes('YouTube access restricted')) {
+                        console.log('🚫 Video is restricted, falling back to YouTube embed...');
+                        showNotification(data.suggestion || 'This video requires YouTube sign-in or age verification. Using YouTube Embed.', 'error');
+                        useYouTubeEmbed();
+                    } else if (data.stream_url && data.stream_url !== 'null' && data.stream_url !== '') {
                         console.log('✅ Stream available, loading with custom player...');
                         useCustomPlayer();
                     } else {
                         console.log('⚠️ No stream available, falling back to YouTube embed...');
+                        showNotification(data.suggestion || 'Stream not available. Using YouTube Embed.', 'error');
                         useYouTubeEmbed();
                     }
                 } catch (error) {
@@ -853,6 +853,7 @@
         });
     </script>
     <script src="/static/js/custom-player.js"></script>
+    <script src="/static/js/theme.js"></script>
     <script src="/static/js/popup.js"></script>
     <!-- Animated Badge Start -->
     <div id="rk-badge">

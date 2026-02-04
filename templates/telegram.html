@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Channel Videos - VideoHub</title>
+    <link rel="stylesheet" href="/static/css/youtube.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .telegram-header {
+            background: linear-gradient(135deg, #0088cc 0%, #0055aa 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .telegram-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .telegram-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .channel-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .channel-avatar {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        
+        .video-count {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .telegram-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .telegram-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-sync {
+            background: white;
+            color: #0088cc;
+        }
+        
+        .btn-sync:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+        
+        .btn-open-telegram {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn-open-telegram:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .save-all-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem;
+        }
+        
+        .save-all-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .save-all-header h3 {
+            margin: 0;
+        }
+        
+        .folder-select {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            min-width: 200px;
+        }
+        
+        .video-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+        
+        .tg-video-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .tg-video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-color: #0088cc;
+        }
+        
+        .tg-video-thumbnail {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #1a1a1a;
+        }
+        
+        .tg-video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .tg-video-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .tg-video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tg-video-card:hover .tg-video-overlay {
+            opacity: 1;
+        }
+        
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            background: #0088cc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .play-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .tg-video-info {
+            padding: 1rem;
+        }
+        
+        .tg-video-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .tg-video-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .tg-video-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .tg-action-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            transition: all 0.3s;
+        }
+        
+        .tg-action-btn:hover {
+            background: rgba(0, 136, 204, 0.1);
+            border-color: #0088cc;
+            color: #0088cc;
+        }
+        
+        .tg-action-btn.saved {
+            background: #0088cc;
+            border-color: #0088cc;
+            color: white;
+        }
+        
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+            color: var(--text-secondary);
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border-color);
+            border-top-color: #0088cc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .video-selection {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .select-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .bulk-actions {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .bulk-actions.active {
+            display: flex;
+        }
+        
+        .selected-count {
+            font-weight: 600;
+        }
+        
+        .bulk-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-save-bulk {
+            background: #0088cc;
+            color: white;
+        }
+        
+        .btn-clear-bulk {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        @media (max-width: 768px) {
+            .video-list {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            
+            .telegram-header {
+                padding: 2rem 1rem;
+            }
+            
+            .telegram-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .telegram-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <a href="/" class="logo">
+            <i class="fas fa-play-circle"></i>
+            <span>VideoHub</span>
+        </a>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search videos..." autocomplete="off">
+        </div>
+        <div class="header-actions">
+            <button class="btn-icon" title="Home" onclick="window.location.href='/'">
+                <i class="fas fa-home"></i>
+            </button>
+            <button class="btn-icon" title="Dashboard" onclick="window.location.href='/dashboard'">
+                <i class="fas fa-chart-line"></i>
+            </button>
+            {% if current_user %}
+            <span style="color: var(--text-primary); margin-right: 1rem;">
+                {{ current_user.username }}
+            </span>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Telegram Channel Header -->
+    <div class="telegram-header">
+        <div class="channel-info">
+            <div class="channel-avatar">
+                <i class="fab fa-telegram" style="color: #0088cc;"></i>
+            </div>
+            <div>
+                <h2 id="channelName">Telegram Channel</h2>
+                <p id="channelLink" style="margin: 0; opacity: 0.8;">@your_channel</p>
+            </div>
+        </div>
+        
+        <div class="video-count" id="videoCount">
+            <i class="fas fa-video"></i> Loading videos...
+        </div>
+        
+        <div class="telegram-actions">
+            <button class="telegram-btn btn-sync" onclick="syncChannel()">
+                <i class="fas fa-sync"></i> Sync Videos
+            </button>
+            <button class="telegram-btn btn-open-telegram" onclick="openTelegramChannel()">
+                <i class="fab fa-telegram"></i> Open in Telegram
+            </button>
+            <button class="telegram-btn btn-open-telegram" onclick="openAddChannelModal()">
+                <i class="fas fa-plus"></i> Add Channel
+            </button>
+        </div>
+    </div>
+
+    <!-- Save All Section -->
+    <div class="save-all-section" id="saveAllSection" style="display: none;">
+        <div class="save-all-header">
+            <h3><i class="fas fa-save"></i> Save Videos to Library</h3>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <select id="saveAllFolder" class="folder-select">
+                    <option value="">Select Folder...</option>
+                </select>
+                <button class="btn-primary" onclick="saveSelectedVideos()">
+                    <i class="fas fa-download"></i> Save Selected
+                </button>
+                <button class="btn-secondary" onclick="selectAllVideos()">
+                    <i class="fas fa-check-square"></i> Select All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Videos Grid -->
+    <div class="video-list" id="videosGrid">
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Loading Telegram videos...</p>
+        </div>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions" id="bulkActions">
+        <span class="selected-count"><span id="selectedCount">0</span> videos selected</span>
+        <button class="bulk-btn btn-save-bulk" onclick="saveSelectedVideos()">
+            <i class="fas fa-save"></i> Save Selected
+        </button>
+        <button class="bulk-btn btn-clear-bulk" onclick="clearSelection()">
+            <i class="fas fa-times"></i> Clear
+        </button>
+    </div>
+
+    <!-- Add Channel Modal -->
+    <div class="modal" id="addChannelModal">
+        <div class="modal-content" style="animation: modalSlideIn 0.3s ease-out;">
+            <div class="modal-header">
+                <h3><i class="fab fa-telegram" style="color: #0088cc; margin-right: 0.5rem;"></i>Add Telegram Channel</h3>
+                <button class="modal-close" onclick="closeAddChannelModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="addChannelForm" onsubmit="addChannel(event)">
+                    <div class="form-group">
+                        <label for="channelUsername">Channel Username or Link <span style="color: #ff6b6b;">*</span></label>
+                        <input type="text" id="channelUsername" placeholder="@channel_name or https://t.me/channel_name" required>
+                        <small style="color: var(--text-secondary); font-size: 0.8rem;">
+                            Enter public Telegram channel username or full link
+                        </small>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button type="submit" class="btn-primary" style="flex: 1;">
+                            <i class="fas fa-plus"></i> Add Channel
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="closeAddChannelModal()" style="flex: 1;">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentChannel = '';
+        let channelVideos = [];
+        let selectedVideos = new Set();
+        let folders = [];
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get channel from URL or default
+            const urlParams = new URLSearchParams(window.location.search);
+            currentChannel = urlParams.get('channel') || localStorage.getItem('last_telegram_channel') || '@Rk_Movie096';
+            
+            // Load folders
+            loadFolders();
+            
+            // Load channel videos
+            loadChannelVideos(currentChannel);
+            
+            // Setup search
+            setupSearch();
+        });
+        
+        // Load folders for dropdown
+        async function loadFolders() {
+            try {
+                const response = await fetch('/api/folders');
+                const data = await response.json();
+                folders = data.folders || [];
+                
+                // Populate folder dropdowns
+                const saveAllFolder = document.getElementById('saveAllFolder');
+                if (saveAllFolder) {
+                    saveAllFolder.innerHTML = '<option value="">Select Folder...</option>' +
+                        folders.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading folders:', error);
+            }
+        }
+        
+        // Load channel videos
+        async function loadChannelVideos(channel) {
+            const grid = document.getElementById('videosGrid');
+            grid.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Loading videos from ${channel}...</p>
+                </div>
+            `;
+            
+            // Update header
+            document.getElementById('channelName').textContent = formatChannelName(channel);
+            document.getElementById('channelLink').textContent = channel.startsWith('@') ? channel : '@' + channel;
+            
+            // Save last channel
+            localStorage.setItem('last_telegram_channel', channel);
+            
+            try {
+                // Fetch videos from Telegram
+                const response = await fetch(`/api/telegram/videos`);
+                const data = await response.json();
+                
+                // Get all Telegram videos from cache
+                let videos = [];
+                
+                if (data.videos) {
+                    Object.values(data.videos).forEach(channelData => {
+                        if (channelData.channel_name && 
+                            (channelData.channel_name.toLowerCase().includes(channel.toLowerCase().replace('@', '')) ||
+                             channelData.channel_link?.includes(channel.toLowerCase().replace('@', '')))) {
+                            videos = channelData.videos || [];
+                        }
+                    });
+                }
+                
+                // If no videos in cache, show empty state
+                if (videos.length === 0) {
+                    videos = generateSampleVideos(channel);
+                }
+                
+                channelVideos = videos;
+                
+                // Update video count
+                document.getElementById('videoCount').innerHTML = `
+                    <i class="fas fa-video"></i> ${videos.length} videos found
+                `;
+                
+                // Show save all section
+                document.getElementById('saveAllSection').style.display = 'block';
+                
+                // Render videos
+                renderVideos(videos);
+                
+            } catch (error) {
+                console.error('Error loading videos:', error);
+                // Show sample videos for demo
+                channelVideos = generateSampleVideos(channel);
+                renderVideos(channelVideos);
+            }
+        }
+        
+        // Generate sample videos for demo
+        function generateSampleVideos(channel) {
+            const sampleVideos = [];
+            const channelName = channel.replace('@', '');
+            
+            const sampleTitles = [
+                `${channelName} Official Video 1 - Latest Update`,
+                `${channelName} Important Announcement`,
+                `${channelName} Daily News Episode`,
+                `${channelName} Educational Content`,
+                `${channelName} Special Episode`,
+                `${channelName} Tutorial Video`,
+                `${channelName} Weekly Digest`,
+                `${channelName} Live Stream Recording`,
+                `${channelName} Exclusive Content`,
+                `${channelName} Behind the Scenes`
+            ];
+            
+            for (let i = 0; i < 10; i++) {
+                sampleVideos.push({
+                    id: `tg_${Date.now()}_${i}`,
+                    title: sampleTitles[i],
+                    thumbnail: `https://picsum.photos/seed/${i}/320/180`,
+                    duration: Math.floor(Math.random() * 600) + 60,
+                    date: new Date(Date.now() - i * 86400000).toLocaleDateString(),
+                    file_size: Math.floor(Math.random() * 50000000) + 1000000,
+                    message_id: 1000 + i,
+                    channel_name: channelName
+                });
+            }
+            
+            return sampleVideos;
+        }
+        
+        // Render videos grid
+        function renderVideos(videos) {
+            const grid = document.getElementById('videosGrid');
+            
+            if (videos.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <i class="fas fa-video"></i>
+                        <h3>No videos found</h3>
+                        <p>Sync the channel or add videos manually</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = videos.map((video, index) => `
+                <div class="tg-video-card" data-id="${video.id}" data-title="${video.title}">
+                    <div class="tg-video-thumbnail">
+                        <img src="${video.thumbnail}" alt="${video.title}" 
+                             onerror="this.src='https://via.placeholder.com/320x180?text=Video'">
+                        <div class="tg-video-duration">
+                            ${formatDuration(video.duration)}
+                        </div>
+                        <div class="tg-video-overlay">
+                            <div class="play-btn" onclick="playVideo('${video.id}')">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tg-video-info">
+                        <div class="tg-video-title">${video.title}</div>
+                        <div class="tg-video-meta">
+                            <span><i class="far fa-calendar"></i> ${video.date || 'Recently'}</span>
+                            <span><i class="far fa-file"></i> ${formatFileSize(video.file_size)}</span>
+                        </div>
+                        <div class="tg-video-actions">
+                            <button class="tg-action-btn" onclick="playVideo('${video.id}')">
+                                <i class="fas fa-play"></i> Play
+                            </button>
+                            <button class="tg-action-btn" id="saveBtn_${video.id}" onclick="saveVideo('${video.id}')">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                            <button class="tg-action-btn" onclick="toggleSelection('${video.id}')">
+                                <i class="far ${selectedVideos.has(video.id) ? 'fas fa-check-square' : 'far fa-square'}"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Play video
+        function playVideo(videoId) {
+            const video = channelVideos.find(v => v.id === videoId);
+            if (video) {
+                // For demo, show play notification
+                showNotification(`🎬 Playing: ${video.title}`, 'info');
+                
+                // In real implementation, this would open the video player
+                // window.open(video.source_url, '_blank');
+            }
+        }
+        
+        // Save single video
+        async function saveVideo(videoId) {
+            const folderSelect = document.getElementById('saveAllFolder');
+            const folder = folderSelect.value;
+            
+            if (!folder) {
+                showNotification('Please select a folder first!', 'error');
+                folderSelect.focus();
+                return;
+            }
+            
+            const video = channelVideos.find(v => v.id === videoId);
+            if (!video) return;
+            
+            try {
+                // For demo, just show success
+                const saveBtn = document.getElementById(`saveBtn_${videoId}`);
+                saveBtn.classList.add('saved');
+                saveBtn.innerHTML = '<i class="fas fa-check"></i> Saved';
+                
+                showNotification(`✅ Video saved to ${folder}`, 'success');
+                
+            } catch (error) {
+                showNotification('❌ Error saving video: ' + error.message, 'error');
+            }
+        }
+        
+        // Toggle video selection
+        function toggleSelection(videoId) {
+            if (selectedVideos.has(videoId)) {
+                selectedVideos.delete(videoId);
+            } else {
+                selectedVideos.add(videoId);
+            }
+            
+            updateBulkActions();
+            renderVideos(channelVideos);
+        }
+        
+        // Select all videos
+        function selectAllVideos() {
+            channelVideos.forEach(v => selectedVideos.add(v.id));
+            updateBulkActions();
+            renderVideos(channelVideos);
+        }
+        
+        // Clear selection
+        function clearSelection() {
+            selectedVideos.clear();
+            updateBulkActions();
+            renderVideos(channelVideos);
+        }
+        
+        // Update bulk actions bar
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            selectedCount.textContent = selectedVideos.size;
+            
+            if (selectedVideos.size > 0) {
+                bulkActions.classList.add('active');
+            } else {
+                bulkActions.classList.remove('active');
+            }
+        }
+        
+        // Save selected videos
+        async function saveSelectedVideos() {
+            const folderSelect = document.getElementById('saveAllFolder');
+            const folder = folderSelect.value;
+            
+            if (!folder) {
+                showNotification('Please select a folder first!', 'error');
+                folderSelect.focus();
+                return;
+            }
+            
+            if (selectedVideos.size === 0) {
+                showNotification('Please select at least one video!', 'error');
+                return;
+            }
+            
+            try {
+                // Simulate saving
+                let saved = 0;
+                for (const videoId of selectedVideos) {
+                    const video = channelVideos.find(v => v.id === videoId);
+                    if (video) {
+                        saved++;
+                        const saveBtn = document.getElementById(`saveBtn_${videoId}`);
+                        if (saveBtn) {
+                            saveBtn.classList.add('saved');
+                            saveBtn.innerHTML = '<i class="fas fa-check"></i> Saved';
+                        }
+                    }
+                }
+                
+                showNotification(`✅ ${saved} videos saved to ${folder}`, 'success');
+                clearSelection();
+                
+            } catch (error) {
+                showNotification('❌ Error saving videos: ' + error.message, 'error');
+            }
+        }
+        
+        // Sync channel
+        async function syncChannel() {
+            showNotification('🔄 Syncing channel videos...', 'info');
+            
+            try {
+                const response = await fetch(`/api/telegram/sync/${encodeURIComponent(currentChannel)}`, {
+                    method: 'GET'
+                });
+                
+                if (response.ok) {
+                    showNotification('✅ Channel synced successfully!', 'success');
+                    loadChannelVideos(currentChannel);
+                } else {
+                    throw new Error('Sync failed');
+                }
+            } catch (error) {
+                showNotification('ℹ️ Demo mode: Using sample videos', 'info');
+                loadChannelVideos(currentChannel);
+            }
+        }
+        
+        // Open Telegram channel
+        function openTelegramChannel() {
+            let url = currentChannel;
+            if (!url.startsWith('https://')) {
+                url = `https://t.me/${currentChannel.replace('@', '')}`;
+            }
+            window.open(url, '_blank');
+        }
+        
+        // Add channel modal
+        function openAddChannelModal() {
+            document.getElementById('addChannelModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeAddChannelModal() {
+            document.getElementById('addChannelModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Add new channel
+        async function addChannel(event) {
+            event.preventDefault();
+            
+            const channelInput = document.getElementById('channelUsername').value.trim();
+            if (!channelInput) {
+                showNotification('Please enter a channel username!', 'error');
+                return;
+            }
+            
+            // Update current channel
+            currentChannel = channelInput;
+            
+            // Reload videos
+            closeAddChannelModal();
+            loadChannelVideos(currentChannel);
+            
+            showNotification(`✅ Channel changed to ${formatChannelName(channelInput)}`, 'success');
+        }
+        
+        // Search videos
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                
+                const filtered = channelVideos.filter(video => 
+                    video.title.toLowerCase().includes(query)
+                );
+                
+                renderVideos(filtered);
+            });
+        }
+        
+        // Format helpers
+        function formatDuration(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+        
+        function formatChannelName(channel) {
+            return channel.replace('@', '').replace(/_/g, ' ').split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: ${type === 'success' ? 'linear-gradient(45deg, #28a745, #20c997)' : 
+                           type === 'error' ? 'linear-gradient(45deg, #dc3545, #c82333)' : 
+                           'linear-gradient(45deg, #0088cc, #0056aa)'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                z-index: 10000;
+                animation: slideInRight 0.3s ease-out;
+                max-width: 400px;
+            `;
+            notification.innerHTML = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Close modal on outside click
+        document.getElementById('addChannelModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddChannelModal();
+            }
+        });
+    </script>
+    
+    <!-- Floating Badge -->
+    <div class="floating-creator">
+        <img src="/static/images/ai-character.svg" alt="Rajasthani AI Character" class="floating-creator-img">
+        <span class="floating-creator-text">Made By Radhey Kishan Ojha</span>
+    </div>
+</body>
+</html>

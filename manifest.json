@@ -1,0 +1,28 @@
+{
+  "name": "VideoHub",
+  "short_name": "VideoHub",
+  "description": "Your Personal Video Library - Save, organize, and watch YouTube videos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#ff0000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/images/ai-character.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/avatar.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["entertainment", "productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}

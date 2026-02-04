@@ -1,18 +1,4 @@
 {
-  "1_V4MopPwS4": {
-    "video_id": "1_V4MopPwS4",
-    "title": "YouTube Video 1_V4MopPwS4",
-    "source_url": "https://www.youtube.com/live/1_V4MopPwS4?si=rI1Kd5wujknnEi9_",
-    "folder_path": "dd",
-    "folder_name": "dd",
-    "embed_url": "https://www.youtube.com/embed/1_V4MopPwS4",
-    "thumbnail_path": "static/thumbnails/1_V4MopPwS4.jpg",
-    "duration": 0,
-    "file_size": 0,
-    "added_time": "2026-01-20T15:58:53.834236",
-    "views_count": 6,
-    "user_id": "admin"
-  },
   "LJ2pcj8eia8_playlist_PLoZP2WsNfBSEtS6IgMV6MRDPwiWOnC2Rp": {
     "video_id": "LJ2pcj8eia8_playlist_PLoZP2WsNfBSEtS6IgMV6MRDPwiWOnC2Rp",
     "original_video_id": "LJ2pcj8eia8",
@@ -447,7 +433,7 @@
     "duration": 1420,
     "uploader": "NANAK CLASSES",
     "added_time": "2026-01-24T05:44:41.799965",
-    "views_count": 5,
+    "views_count": 6,
     "source_type": "youtube_playlist",
     "playlist_id": "PLbmKHoPJdhKZqYiylHRJ7YxXRDEx1GjRY",
     "user_id": "admin"
@@ -703,7 +689,7 @@
     "duration": 1451,
     "uploader": "NANAK CLASSES",
     "added_time": "2026-01-24T05:44:41.800040",
-    "views_count": 3,
+    "views_count": 8,
     "source_type": "youtube_playlist",
     "playlist_id": "PLbmKHoPJdhKZqYiylHRJ7YxXRDEx1GjRY",
     "user_id": "admin"
@@ -719,7 +705,7 @@
     "duration": 1006,
     "uploader": "NANAK CLASSES",
     "added_time": "2026-01-24T05:44:41.800043",
-    "views_count": 0,
+    "views_count": 2,
     "source_type": "youtube_playlist",
     "playlist_id": "PLbmKHoPJdhKZqYiylHRJ7YxXRDEx1GjRY",
     "user_id": "admin"
