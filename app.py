@@ -155,8 +155,12 @@ def load_db():
         return {}
 
 def save_db(db):
-    with open(VIDEO_DB, 'w') as f:
-        json.dump(db, f, indent=2)
+    try:
+        with open(VIDEO_DB, 'w') as f:
+            json.dump(db, f, indent=2)
+    except OSError as e:
+        print(f"Error saving video database: {e}")
+        # Return without raising exception - allow app to continue
 
 def load_folder_db():
     try:
@@ -166,8 +170,12 @@ def load_folder_db():
         return {}
 
 def save_folder_db(db):
-    with open(FOLDER_DB, 'w') as f:
-        json.dump(db, f, indent=2)
+    try:
+        with open(FOLDER_DB, 'w') as f:
+            json.dump(db, f, indent=2)
+    except OSError as e:
+        print(f"Error saving folder database: {e}")
+        # Return without raising exception - allow app to continue
 
 def load_playlist_db():
     try:
@@ -177,8 +185,12 @@ def load_playlist_db():
         return {}
 
 def save_playlist_db(db):
-    with open(PLAYLIST_DB, 'w') as f:
-        json.dump(db, f, indent=2)
+    try:
+        with open(PLAYLIST_DB, 'w') as f:
+            json.dump(db, f, indent=2)
+    except OSError as e:
+        print(f"Error saving playlist database: {e}")
+        # Return without raising exception - allow app to continue
 
 async def extract_playlist_videos(playlist_url, username=None):
     """Extract all videos from a YouTube playlist"""
@@ -644,7 +656,12 @@ async def watch(request: Request, video_id: str, auth_token: str = Cookie(None))
 
     # Increment views
     video['views_count'] = video.get('views_count', 0) + 1
-    save_db(db)
+    # Try to save DB - handle read-only filesystem error (common on Vercel)
+    try:
+        save_db(db)
+    except OSError as e:
+        print(f"Error saving database: {e}")
+        # Continue without saving (read-only filesystem on Vercel)
     return templates.TemplateResponse("watch.html", {"request": request, "video": video, "current_user": user})
 
 @app.post("/add_video")
