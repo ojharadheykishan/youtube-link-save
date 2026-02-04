@@ -803,6 +803,18 @@ async def get_stream(video_id: str, auth_token: str = Cookie(None)):
             except Exception as e:
                 err_msg = str(e)[:80]
                 print(f"  ⚠️ Format {fmt} failed: {err_msg}")
+                # Check for common YouTube errors
+                if 'Sign in' in str(e) or 'bot' in str(e).lower() or 'age' in str(e).lower():
+                    print(f"🚫 YouTube access restricted: {str(e)}")
+                    return {
+                        "stream_url": None,
+                        "error": "YouTube access restricted",
+                        "suggestion": "This video requires YouTube sign-in or age verification. Please use the YouTube Embed player instead.",
+                        "title": video.get('title'),
+                        "video_id": video_id,
+                        "restricted": True,
+                        "fallback": True
+                    }
                 continue
         
         # If we still don't have URL, log error and return fallback info
@@ -906,6 +918,15 @@ async def proxy_stream(video_id: str, auth_token: str = Cookie(None)):
             except Exception as e:
                 err_msg = str(e)[:50]
                 print(f"  ⚠️ Format {fmt} failed: {err_msg}")
+                # Check for common YouTube errors
+                if 'Sign in' in str(e) or 'bot' in str(e).lower() or 'age' in str(e).lower():
+                    print(f"🚫 YouTube access restricted: {str(e)}")
+                    return {
+                        "error": "YouTube access restricted",
+                        "suggestion": "This video requires YouTube sign-in or age verification. Please use the YouTube Embed player instead.",
+                        "video_id": video_id,
+                        "restricted": True
+                    }
                 continue
         
         if not stream_url:
