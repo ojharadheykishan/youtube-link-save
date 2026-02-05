@@ -1,4 +1,4 @@
-ter name="content">"""
+"""
 RSS Feed & Progress Tracking API Routes
 """
 

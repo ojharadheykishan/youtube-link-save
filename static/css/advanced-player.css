@@ -1,0 +1,369 @@
+ter name="content">/* Advanced Video Player CSS */
+
+/* Speed Control Dropdown */
+.speed-control-btn {
+    position: relative;
+}
+
+.speed-dropdown {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20, 20, 30, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 8px 0;
+    min-width: 120px;
+    display: none;
+    flex-direction: column;
+    margin-bottom: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.speed-dropdown.active {
+    display: flex;
+    animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.speed-option {
+    padding: 10px 20px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+}
+
+.speed-option:hover {
+    background: rgba(0, 136, 204, 0.3);
+    color: #0088cc;
+}
+
+.speed-option.active {
+    background: linear-gradient(135deg, #0088cc, #229ED9);
+    color: #fff;
+}
+
+/* Theater Mode */
+.theater-mode {
+    max-width: 1400px !important;
+    margin: 0 auto;
+}
+
+body.theater-mode-active {
+    background: #000;
+}
+
+.theater-mode .player-container {
+    max-width: 100%;
+    border-radius: 0;
+}
+
+/* Mini Player */
+.video-mini-player {
+    animation: miniPlayerEnter 0.3s ease;
+}
+
+@keyframes miniPlayerEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.mini-player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mini-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.mini-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 5px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.mini-close:hover {
+    opacity: 1;
+}
+
+.mini-video-container {
+    aspect-ratio: 16/9;
+    background: #000;
+}
+
+.mini-video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.mini-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mini-play {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #0088cc, #229ED9);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.mini-play:hover {
+    transform: scale(1.1);
+}
+
+.mini-close-btn {
+    flex: 1;
+    padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mini-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Chapter Markers */
+.chapter-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #0088cc, #229ED9);
+    cursor: pointer;
+    z-index: 10;
+    transform: translateX(-50%);
+}
+
+.chapter-marker::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    background: #0088cc;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+
+.chapter-marker:hover {
+    width: 5px;
+    background: linear-gradient(180deg, #00bcd4, #0088cc);
+}
+
+/* Skip Intro Button */
+.skip-intro-btn {
+    background: rgba(255, 193, 7, 0.2) !important;
+    border-color: #ffc107 !important;
+    color: #ffc107 !important;
+}
+
+.skip-intro-btn:hover {
+    background: #ffc107 !important;
+    color: #000 !important;
+}
+
+/* Player Notifications */
+.player-notification {
+    font-size: 1rem;
+    font-weight: 500;
+    animation: fadeInOut 2s forwards;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    15% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    85% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+}
+
+/* Custom Progress Bar */
+.custom-progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.custom-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #0088cc, #229ED9);
+    border-radius: 3px;
+    transition: width 0.1s;
+}
+
+.custom-progress-handle {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translate(50%, -50%);
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.custom-progress-bar:hover .custom-progress-handle {
+    opacity: 1;
+}
+
+/* Volume Slider */
+.volume-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.volume-slider {
+    width: 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.volume-slider-container:hover .volume-slider,
+.volume-slider.active {
+    width: 80px;
+    opacity: 1;
+}
+
+/* Buffering Indicator */
+.buffering-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+}
+
+.buffering-indicator.active {
+    display: block;
+}
+
+.buffering-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #0088cc;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Keyboard Shortcuts Help */
+.keyboard-shortcuts-modal {
+    max-width: 500px;
+}
+
+.keyboard-shortcuts-modal .shortcut-list {
+    display: grid;
+    gap: 10px;
+    padding: 20px;
+}
+
+.shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.shortcut-keys {
+    display: flex;
+    gap: 5px;
+}
+
+.shortcut-key {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-family: monospace;
+}
+
+.shortcut-description {
+    color: #a0a0b0;
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .speed-dropdown {
+        min-width: 100px;
+    }
+    
+    .speed-option {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .video-mini-player {
+        width: 280px !important;
+        bottom: 10px !important;
+        right: 10px !important;
+    }
+}

@@ -2458,6 +2458,7 @@ async def api_update_social_links(
     facebook: str = Form(None),
     whatsapp: str = Form(None),
     instagram: str = Form(None),
+    telegram: str = Form(None),
     auth_token: str = Cookie(None)
 ):
     """Update social media links (admin only)"""
@@ -2481,6 +2482,8 @@ async def api_update_social_links(
         social_db["whatsapp"] = whatsapp
     if instagram is not None:
         social_db["instagram"] = instagram
+    if telegram is not None:
+        social_db["telegram"] = telegram
     
     save_social_db(social_db)
     return {"message": "Social media links updated successfully", "data": social_db}
