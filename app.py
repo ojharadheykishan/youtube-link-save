@@ -198,7 +198,7 @@ def load_social_db():
         with open(SOCIAL_DB, 'r') as f:
             return json.load(f)
     except FileNotFoundError:
-        return {"facebook": "", "whatsapp": "", "instagram": ""}
+        return {"facebook": "", "whatsapp": "", "instagram": "", "telegram": ""}
 
 def save_social_db(db):
     try:
@@ -1178,6 +1178,35 @@ async def delete_video(video_id: str, auth_token: str = Cookie(None)):
     save_db(db)
 
     return {"message": "Video deleted successfully"}
+
+@app.post("/api/social-link")
+async def update_social_link(platform: str = Form(...), url: str = Form(...), auth_token: str = Cookie(None)):
+    """Update social media link - admin only"""
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        
+        if username not in users or users[username].get('role') != 'admin':
+            raise HTTPException(status_code=403, detail="Access denied - admin only")
+        
+        social_db = load_social_db()
+        social_db[platform] = url
+        save_social_db(social_db)
+        
+        return {"success": True, "message": f"{platform} link updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/social-links")
+async def get_social_links():
+    """Get all social media links"""
+    return load_social_db()
+
 
 @app.get("/api/telegram/settings")
 async def get_telegram_settings(auth_token: str = Cookie(None)):

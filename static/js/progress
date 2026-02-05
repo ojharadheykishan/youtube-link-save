@@ -1,0 +1,309 @@
+ter name="content">/**
+ * Progress Tracking & RSS Feed Features
+ */
+
+// Progress Tracking Variables
+let watchProgress = {};
+let playbackHistory = {};
+
+// Initialize progress tracking
+function initProgressTracking() {
+    loadProgressFromStorage();
+    setupProgressAutoSave();
+}
+
+// Load progress from localStorage
+function loadProgressFromStorage() {
+    try {
+        const progress = localStorage.getItem('video_watch_progress');
+        watchProgress = progress ? JSON.parse(progress) : {};
+        
+        const history = localStorage.getItem('video_playback_history');
+        playbackHistory = history ? JSON.parse(history) : {};
+    } catch (e) {
+        console.error('Error loading progress:', e);
+        watchProgress = {};
+        playbackHistory = {};
+    }
+}
+
+// Save progress to localStorage
+function saveProgressToStorage() {
+    try {
+        localStorage.setItem('video_watch_progress', JSON.stringify(watchProgress));
+        localStorage.setItem('video_playback_history', JSON.stringify(playbackHistory));
+    } catch (e) {
+        console.error('Error saving progress:', e);
+    }
+}
+
+// Auto-save progress every 5 seconds
+function setupProgressAutoSave() {
+    setInterval(() => {
+        saveProgressToStorage();
+    }, 5000);
+}
+
+// Track video playback
+function trackPlayback(videoId, currentTime, duration) {
+    if (!watchProgress[videoId]) {
+        watchProgress[videoId] = {
+            currentTime: 0,
+            duration: 0,
+            lastPosition: 0,
+            progress: 0,
+            startedAt: null,
+            completedAt: null,
+            totalWatchTime: 0,
+            playCount: 0
+        };
+    }
+    
+    const progress = watchProgress[videoId];
+    progress.currentTime = currentTime;
+    progress.duration = duration;
+    progress.lastPosition = currentTime;
+    progress.progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+    progress.totalWatchTime += 1;
+    progress.playCount += 1;
+    
+    if (!progress.startedAt) {
+        progress.startedAt = new Date().toISOString();
+    }
+    
+    // Mark as completed if watched > 90%
+    if (progress.progress >= 90 && !progress.completedAt) {
+        progress.completedAt = new Date().toISOString();
+    }
+    
+    saveProgressToStorage();
+    updateVideoProgressUI(videoId);
+}
+
+// Get video progress
+function getVideoProgress(videoId) {
+    return watchProgress[videoId] || null;
+}
+
+// Check if video is completed
+function isVideoCompleted(videoId) {
+    const progress = watchProgress[videoId];
+    return progress && progress.progress >= 90;
+}
+
+// Get remaining time
+function getRemainingTime(videoId) {
+    const progress = watchProgress[videoId];
+    if (!progress || !progress.duration) return null;
+    return progress.duration - progress.currentTime;
+}
+
+// Format time for display
+function formatTime(seconds) {
+    if (!seconds) return '0:00';
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (hrs > 0) {
+        return hrs + ':' + mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+    }
+    return mins + ':' + secs.toString().padStart(2, '0');
+}
+
+// Format duration
+function formatDuration(seconds) {
+    if (!seconds) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return mins + ':' + secs.toString().padStart(2, '0');
+}
+
+// Update video card progress UI
+function updateVideoProgressUI(videoId) {
+    const card = document.querySelector('.video-card[data-id="' + videoId + '"]');
+    if (!card) return;
+    
+    const progress = watchProgress[videoId];
+    if (!progress) return;
+    
+    // Find or create progress bar
+    let progressBar = card.querySelector('.progress-bar-container');
+    if (!progressBar) {
+        progressBar = document.createElement('div');
+        progressBar.className = 'progress-bar-container';
+        progressBar.innerHTML = '<div class="progress-bar"><div class="progress-fill"></div><div class="progress-text"></div>';
+        card.querySelector('.video-thumbnail').appendChild(progressBar);
+    }
+    
+    const fill = progressBar.querySelector('.progress-fill');
+    const text = progressBar.querySelector('.progress-text');
+    
+    fill.style.width = Math.min(progress.progress, 100) + '%';
+    
+    if (progress.progress >= 90) {
+        fill.classList.add('completed');
+        text.innerHTML = '<i class="fas fa-check-circle"></i> Completed';
+        text.classList.add('completed');
+    } else if (progress.progress > 0) {
+        text.innerHTML = formatTime(progress.currentTime) + ' / ' + formatTime(progress.duration) + ' (' + Math.round(progress.progress) + '%)';
+    }
+}
+
+// Reset video progress
+function resetProgress(videoId) {
+    if (!confirm('Reset watch progress for this video?')) return;
+    
+    delete watchProgress[videoId];
+    saveProgressToStorage();
+    
+    const card = document.querySelector('.video-card[data-id="' + videoId + '"]');
+    const progressBar = card ? card.querySelector('.progress-bar-container') : null;
+    if (progressBar) {
+        progressBar.remove();
+    }
+    
+    showNotification('Progress reset', 'info');
+}
+
+// Clear all progress
+function clearAllProgress() {
+    if (!confirm('Reset all watch progress?')) return;
+    
+    watchProgress = {};
+    playbackHistory = {};
+    saveProgressToStorage();
+    renderVideos();
+    showNotification('All progress cleared', 'success');
+}
+
+// Calculate playback statistics
+function calculatePlaybackStats() {
+    let totalWatchTime = 0;
+    let completedVideos = 0;
+    let totalPlayCount = 0;
+    const topWatched = [];
+    
+    Object.entries(watchProgress).forEach(([videoId, progress]) => {
+        totalWatchTime += progress.totalWatchTime || 0;
+        totalPlayCount += progress.playCount || 0;
+        
+        if (progress.progress >= 90) {
+            completedVideos++;
+        }
+        
+        topWatched.push({
+            id: videoId,
+            title: playbackHistory[videoId]?.title || 'Unknown',
+            thumbnail: playbackHistory[videoId]?.thumbnail || '',
+            watchTime: progress.totalWatchTime || 0
+        });
+    });
+    
+    topWatched.sort((a, b) => b.watchTime - a.watchTime);
+    
+    return {
+        totalVideosWatched: Object.keys(watchProgress).length,
+        completedVideos,
+        totalWatchTime,
+        totalPlayCount,
+        topWatched
+    };
+}
+
+// Show playback statistics modal
+function showPlaybackStats() {
+    const stats = calculatePlaybackStats();
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = '<div class="player-modal-content" style="max-width:600px;max-height:80vh;overflow-y:auto;"><div class="player-header"><h3><i class="fas fa-chart-line"></i> Playback Statistics</h3><button class="close-btn" onclick="this.closest(\'.modal\').remove()"><i class="fas fa-times"></i></button></div><div style="padding:1.5rem;"><div class="stats-grid"><div class="stat-card"><div class="stat-icon"><i class="fas fa-play"></i></div><div class="stat-value">' + stats.totalVideosWatched + '</div><div class="stat-label">Videos Watched</div><div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-value">' + stats.completedVideos + '</div><div class="stat-label">Completed</div><div class="stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-value">' + formatTime(stats.totalWatchTime) + '</div><div class="stat-label">Total Watch Time</div><div class="stat-card"><div class="stat-icon"><i class="fas fa-fire"></i></div><div class="stat-value">' + stats.totalPlayCount + '</div><div class="stat-label">Play Sessions</div></div></div>';
+    document.body.appendChild(modal);
+}
+
+// Player event handlers for progress tracking
+function setupPlayerProgressTracking(player, videoId) {
+    player.addEventListener('timeupdate', function() {
+        trackPlayback(videoId, player.currentTime, player.duration);
+    });
+    
+    player.addEventListener('ended', function() {
+        trackPlayback(videoId, player.duration, player.duration);
+        showNotification('Video completed!', 'success');
+    });
+    
+    // Resume from last position
+    const progress = watchProgress[videoId];
+    if (progress && progress.lastPosition > 0) {
+        player.currentTime = Math.min(progress.lastPosition, player.duration - 10);
+    }
+}
+
+// ===== RSS Feed Generation =====
+
+// Generate RSS feed URL for playlists
+function getRSSFeedUrl(playlistId) {
+    const baseUrl = window.location.origin;
+    return baseUrl + '/api/rss/' + playlistId;
+}
+
+// Copy RSS feed URL to clipboard
+function copyRSSUrl(playlistId) {
+    const url = getRSSFeedUrl(playlistId);
+    navigator.clipboard.writeText(url).then(function() {
+        showNotification('RSS URL copied to clipboard!', 'success');
+    }).catch(function() {
+        showNotification('Failed to copy URL', 'error');
+    });
+}
+
+// Show RSS feed modal
+function showRSSModal(playlistId, playlistTitle) {
+    const rssUrl = getRSSFeedUrl(playlistId);
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = '<div class="player-modal-content" style="max-width:550px;"><div class="player-header"><h3><i class="fas fa-rss"></i> RSS Feed</h3><button class="close-btn" onclick="this.closest(\'.modal\').remove()"><i class="fas fa-times"></i></button></div><div style="padding:1.5rem;"><div style="text-align:center;margin-bottom:1.5rem;"><div class="rss-icon"><i class="fas fa-rss-square"></i></div><h4 style="margin-top:0.5rem;">' + playlistTitle + '</h4></div><div class="form-group"><label>RSS Feed URL</label><div class="input-with-btn"><input type="text" id="rssFeedUrl" value="' + rssUrl + '" readonly><button class="btn btn-primary" onclick="copyRSSUrl(\'' + playlistId + '\')"><i class="fas fa-copy"></i> Copy</button></div></div>';
+    document.body.appendChild(modal);
+}
+
+// Export progress as JSON
+function exportProgress() {
+    const data = {
+        exportDate: new Date().toISOString(),
+        progress: watchProgress,
+        history: playbackHistory
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'watch-progress-' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showNotification('Progress exported!', 'success');
+}
+
+// Import progress from JSON
+function importProgress(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.progress) {
+                watchProgress = Object.assign({}, watchProgress, data.progress);
+            }
+            if (data.history) {
+                playbackHistory = Object.assign({}, playbackHistory, data.history);
+            }
+            saveProgressToStorage();
+            renderVideos();
+            showNotification('Progress imported!', 'success');
+        } catch (error) {
+            showNotification('Invalid file format', 'error');
+        }
+    };
+    reader.readAsText(file);
+}

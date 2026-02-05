@@ -7,9 +7,71 @@
     <link rel="stylesheet" href="/static/css/youtube.css">
     <link rel="stylesheet" href="/static/css/modern-section.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/static/images/ai-character.svg">
-    <meta name="theme-color" content="#ff0000">
+        <link rel="manifest" href="/manifest.json">
+        <link rel="apple-touch-icon" href="/static/images/ai-character.svg">
+        <meta name="theme-color" content="#ff0000">
+        
+        <!-- Social Media Styles -->
+        <style>
+            .social-links {
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                margin: 2rem 0;
+                flex-wrap: wrap;
+            }
+            
+            .social-link {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                color: white;
+                font-size: 1.5rem;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
+            
+            .social-link:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            }
+            
+            .social-link.facebook {
+                background: linear-gradient(45deg, #3b5998, #1877f2);
+            }
+            
+            .social-link.whatsapp {
+                background: linear-gradient(45deg, #25d366, #128c7e);
+            }
+            
+            .social-link.instagram {
+                background: linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045);
+            }
+            
+            .social-link.telegram {
+                background: linear-gradient(45deg, #0088cc, #00a8e8);
+            }
+            
+            .social-link.youtube {
+                background: linear-gradient(45deg, #cd201f, #ff0000);
+            }
+            
+            .social-link.linkedin {
+                background: linear-gradient(45deg, #0077b5, #00a0dc);
+            }
+            
+            @media (max-width: 768px) {
+                .social-link {
+                    width: 40px;
+                    height: 40px;
+                    font-size: 1.2rem;
+                }
+            }
+        </style>
     <meta name="description" content="Your Personal Video Library - Save, organize, and watch YouTube videos">
     <style>
         /* Modern Animated Homepage Styles */
@@ -45,6 +107,11 @@
             z-index: 2;
             max-width: 800px;
             margin: 0 auto;
+        }
+        
+        .hero-social-links {
+            margin: 2rem 0;
+            animation: slideUp 0.8s ease-out 0.5s both;
         }
 
         .hero-title {
@@ -503,6 +570,9 @@
                     </a>
                     <a href="{{ social_db.instagram }}" target="_blank" class="social-link" title="Instagram" {% if not social_db.instagram %}style="display: none;"{% endif %}>
                         <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="{{ social_db.telegram }}" target="_blank" class="social-link" title="Telegram" {% if not social_db.telegram %}style="display: none;"{% endif %}>
+                        <i class="fab fa-telegram"></i>
                     </a>
                 </div>
             </div>

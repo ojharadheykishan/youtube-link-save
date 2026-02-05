@@ -397,6 +397,34 @@
                     <input type="number" id="max-videos-user" min="1" placeholder="Max videos per user">
                     <button onclick="updateSetting('max_videos_per_user')" style="padding: 0.5rem 1rem; margin-left: 0.5rem; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer;">Update</button>
                 </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <h3>Social Media Settings</h3>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label><strong>Facebook URL:</strong></label>
+                    <input type="text" id="facebook-url" placeholder="https://facebook.com/yourpage" style="width: 400px; padding: 0.5rem; margin: 0.5rem 0; border: 1px solid var(--border-color); border-radius: 4px;">
+                    <button onclick="updateSocialLink('facebook')" style="padding: 0.5rem 1rem; margin-left: 0.5rem; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer;">Update</button>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label><strong>WhatsApp URL:</strong></label>
+                    <input type="text" id="whatsapp-url" placeholder="https://wa.me/yournumber" style="width: 400px; padding: 0.5rem; margin: 0.5rem 0; border: 1px solid var(--border-color); border-radius: 4px;">
+                    <button onclick="updateSocialLink('whatsapp')" style="padding: 0.5rem 1rem; margin-left: 0.5rem; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer;">Update</button>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label><strong>Instagram URL:</strong></label>
+                    <input type="text" id="instagram-url" placeholder="https://instagram.com/yourpage" style="width: 400px; padding: 0.5rem; margin: 0.5rem 0; border: 1px solid var(--border-color); border-radius: 4px;">
+                    <button onclick="updateSocialLink('instagram')" style="padding: 0.5rem 1rem; margin-left: 0.5rem; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer;">Update</button>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label><strong>Telegram URL:</strong></label>
+                    <input type="text" id="telegram-url" placeholder="https://t.me/yourchannel" style="width: 400px; padding: 0.5rem; margin: 0.5rem 0; border: 1px solid var(--border-color); border-radius: 4px;">
+                    <button onclick="updateSocialLink('telegram')" style="padding: 0.5rem 1rem; margin-left: 0.5rem; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer;">Update</button>
+                </div>
 
                 <div style="margin-bottom: 1.5rem;">
                     <label><strong>Enable Video Moderation:</strong></label>
@@ -772,42 +800,41 @@
             }
         }
 
-        async function saveSocialSettings() {
+        async function updateSocialLink(platform) {
             try {
-                const facebook = document.getElementById('facebook-url').value;
-                const whatsapp = document.getElementById('whatsapp-url').value;
-                const instagram = document.getElementById('instagram-url').value;
+                const url = document.getElementById(`${platform}-url`).value;
                 
                 const formData = new FormData();
-                if (facebook) formData.append('facebook', facebook);
-                if (whatsapp) formData.append('whatsapp', whatsapp);
-                if (instagram) formData.append('instagram', instagram);
+                formData.append('platform', platform);
+                formData.append('url', url);
                 
-                const response = await fetch("/api/social", {
+                const response = await fetch("/api/social-link", {
                     method: "POST",
                     body: formData
                 });
                 
                 if (response.ok) {
-                    alert('Social media settings saved successfully!');
+                    const data = await response.json();
+                    alert(data.message);
                 } else {
                     const data = await response.json();
                     alert(`Error: ${data.detail}`);
                 }
             } catch (error) {
-                console.error('Error saving social settings:', error);
-                alert('An error occurred while saving social media settings');
+                console.error('Error updating social link:', error);
+                alert('An error occurred while updating the social link');
             }
         }
 
         // Load social media settings when settings section is shown
         function loadSocialSettings() {
-            fetch("/api/social")
+            fetch("/api/social-links")
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('facebook-url').value = data.facebook || '';
                     document.getElementById('whatsapp-url').value = data.whatsapp || '';
                     document.getElementById('instagram-url').value = data.instagram || '';
+                    document.getElementById('telegram-url').value = data.telegram || '';
                 })
                 .catch(error => console.error('Error loading social settings:', error));
         }
