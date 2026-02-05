@@ -26,5 +26,12 @@
     "parent_path": "",
     "user_id": "admin",
     "created_time": "2026-01-24T17:53:01.942587"
+  },
+  "culture": {
+    "name": "culture",
+    "path": "culture",
+    "parent_path": "",
+    "user_id": "admin",
+    "created_time": "2026-02-05T18:33:45.284294"
   }
 }
