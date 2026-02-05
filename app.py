@@ -209,67 +209,76 @@ def save_social_db(db):
         # Return without raising exception - allow app to continue
 
 async def extract_playlist_videos(playlist_url, username=None):
-    """Extract all videos from a YouTube playlist"""
+    """Extract all videos from a YouTube playlist - SUPER FAST mode"""
     try:
-        # Try with different options to extract playlist
+        print(f"🔍 Extracting videos from playlist: {playlist_url}")
+        
+        # Validate and normalize playlist URL
+        import re
+        playlist_id = None
+        
+        # Extract playlist ID from various YouTube URL formats
+        patterns = [
+            r'list=([A-Za-z0-9_-]+)',  # Standard playlist parameter
+            r'playlist\?list=([A-Za-z0-9_-]+)',  # Playlist page URL
+            r'youtube\.com\/playlist\/([A-Za-z0-9_-]+)',  # New playlist format
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, playlist_url)
+            if match:
+                playlist_id = match.group(1)
+                break
+        
+        if playlist_id:
+            normalized_url = f"https://www.youtube.com/playlist?list={playlist_id}"
+            print(f"✅ Normalized playlist URL: {normalized_url}")
+        else:
+            print(f"❌ Invalid playlist URL - no playlist ID found: {playlist_url}")
+            return []
+
+        # SUPER FAST extraction - minimal metadata only
         ydl_opts = {
             'quiet': True,
             'no_warnings': True,
-            'extract_flat': 'in_playlist',  # Extract flat info for playlists
-            'playlist_items': '1:100',  # Get first 100 videos
+            'extract_flat': 'in_playlist',  # Extract minimal info for playlists
+            'playlist_items': '1:300',  # Get first 300 videos (increased limit)
+            'ignore_errors': True,  # Continue on errors
+            'timeout': 30,  # Reduced timeout for faster failure
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            },
+            'skip_download': True,
+            'force_generic_extractor': False,
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(playlist_url, download=False)
+            info = ydl.extract_info(normalized_url, download=False)
 
             if 'entries' in info and info['entries']:
+                # Process videos in bulk
                 videos = []
                 for entry in info['entries']:
                     if entry and entry.get('id'):
-                        video_info = {
+                        videos.append({
                             'video_id': entry.get('id'),
                             'title': entry.get('title', 'Unknown Title'),
                             'url': f"https://www.youtube.com/watch?v={entry.get('id')}",
                             'duration': entry.get('duration', 0),
                             'uploader': entry.get('uploader', 'Unknown'),
-                            'playlist_id': info.get('id'),
+                            'playlist_id': info.get('id', playlist_id),
                             'playlist_title': info.get('title', 'Unknown Playlist')
-                        }
-                        videos.append(video_info)
+                        })
+                print(f"✅ Extracted {len(videos)} videos from playlist (SUPER FAST)")
                 return videos
             else:
-                print(f"No entries found in playlist info. Available keys: {list(info.keys()) if isinstance(info, dict) else 'Not a dict'}")
-                # Try alternative approach for single video URLs with list parameter
-                if 'list=' in playlist_url and 'watch?v=' in playlist_url:
-                    print("Detected single video with playlist parameter, trying to extract playlist info...")
-                    # Extract playlist ID and try to get playlist info
-                    import re
-                    list_match = re.search(r'list=([A-Za-z0-9_-]+)', playlist_url)
-                    if list_match:
-                        playlist_id = list_match.group(1)
-                        try:
-                            playlist_url_clean = f"https://www.youtube.com/playlist?list={playlist_id}"
-                            info = ydl.extract_info(playlist_url_clean, download=False)
-                            if 'entries' in info and info['entries']:
-                                videos = []
-                                for entry in info['entries'][:10]:  # Limit to first 10
-                                    if entry and entry.get('id'):
-                                        video_info = {
-                                            'video_id': entry.get('id'),
-                                            'title': entry.get('title', 'Unknown Title'),
-                                            'url': f"https://www.youtube.com/watch?v={entry.get('id')}",
-                                            'duration': entry.get('duration', 0),
-                                            'uploader': entry.get('uploader', 'Unknown'),
-                                            'playlist_id': playlist_id,
-                                            'playlist_title': info.get('title', 'Unknown Playlist')
-                                        }
-                                        videos.append(video_info)
-                                return videos
-                        except Exception as e2:
-                            print(f"Alternative playlist extraction failed: {e2}")
+                print(f"❌ No entries found in playlist info. Available keys: {list(info.keys()) if isinstance(info, dict) else 'Not a dict'}")
                 return []
+                
     except Exception as e:
-        print(f"Error extracting playlist: {e}")
+        print(f"❌ Error extracting playlist: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return []
 
 async def download_video_locally(video_id, username, quality='best'):
@@ -329,10 +338,14 @@ async def download_video_alternative(video_id, username):
         return None
 
 async def add_playlist(playlist_url, folder_name, username, monitor=False):
-    """Add entire playlist with option to monitor for updates"""
+    """Add entire playlist with option to monitor for updates - FAST MODE"""
+    print(f"📥 Starting playlist import (FAST MODE): URL={playlist_url}, Folder={folder_name}, Monitor={monitor}")
+    
+    # Extract playlist metadata and videos (FAST mode - no downloads)
     videos = await extract_playlist_videos(playlist_url)
 
     if not videos or len(videos) == 0:
+        print(f"❌ No videos extracted from playlist: {playlist_url}")
         return {"error": "Could not extract videos from playlist. Please check if the playlist URL is valid and public."}
 
     db = load_db()
@@ -349,13 +362,7 @@ async def add_playlist(playlist_url, folder_name, username, monitor=False):
             'created_time': datetime.now().isoformat()
         }
         save_folder_db(folder_db)
-
-    # Fix existing playlist videos with username field
-    for video_id, video in db.items():
-        if 'username' in video and 'user_id' not in video:
-            video['user_id'] = video['username']
-            del video['username']
-    save_db(db)
+        print(f"✅ Created new folder: {folder_name}")
 
     added_count = 0
     playlist_id = videos[0]['playlist_id'] if videos else None
@@ -373,25 +380,22 @@ async def add_playlist(playlist_url, folder_name, username, monitor=False):
             'monitor': True
         }
         save_playlist_db(playlist_db)
+        print(f"✅ Playlist monitoring enabled: {playlist_id}")
 
-    # Add all videos
-    print(f"Database before adding: {list(db.keys())}")
+    # Add all videos (FAST - metadata only)
+    print(f"📊 Database contains {len(db)} videos before addition")
     
+    # Process videos in bulk for speed
+    videos_to_add = []
     for video in videos:
-        # Use simpler video_id format to avoid duplicates
         video_id = f"{video['video_id']}_{playlist_id}"
-
-        print(f"Processing video: {video.get('title', 'Unknown')} with ID: {video_id}")
         if video_id not in db:
-            print(f"Adding video {video_id} to database")
-            # For now, don't download locally due to YouTube restrictions
-            # Just add for streaming - local download can be added later with proper cookies
-            db[video_id] = {
+            videos_to_add.append({
                 'video_id': video_id,
                 'original_video_id': video['video_id'],
                 'title': video['title'],
                 'url': video['url'],
-                'local_path': None,  # Will be downloaded later if needed
+                'local_path': None,
                 'folder_name': folder_name,
                 'folder_path': folder_name,
                 'duration': video['duration'],
@@ -401,17 +405,18 @@ async def add_playlist(playlist_url, folder_name, username, monitor=False):
                 'source_type': 'youtube_playlist',
                 'playlist_id': playlist_id,
                 'user_id': username
-            }
-            added_count += 1
-            print(f"Successfully added video {video_id}, total added: {added_count}")
-        else:
-            print(f"Video {video_id} already exists in database")
-    
-    print(f"Database after adding: {list(db.keys())}")
+            })
+
+    # Bulk add to database
+    for video_data in videos_to_add:
+        db[video_data['video_id']] = video_data
+        added_count += 1
 
     save_db(db)
+    
+    print(f"🎉 Playlist import completed (FAST MODE): Added {added_count} videos in {len(videos_to_add)} operations")
     return {
-        "message": f"Added {added_count} videos from playlist",
+        "message": f"Added {added_count} videos from playlist (FAST MODE)",
         "playlist_id": playlist_id,
         "total_videos": len(videos)
     }
@@ -424,6 +429,7 @@ async def check_playlist_updates():
     for playlist_id, playlist_info in playlist_db.items():
         if playlist_info.get('monitor'):
             try:
+                print(f"Checking for updates in playlist: {playlist_info['title']} ({playlist_id})")
                 videos = await extract_playlist_videos(playlist_info['url'])
                 current_video_ids = {v['video_id'] for v in videos}
 
@@ -438,9 +444,10 @@ async def check_playlist_updates():
                 if new_videos:
                     username = playlist_info['username']
                     folder_name = playlist_info['folder_name']
+                    print(f"Found {len(new_videos)} new videos in playlist {playlist_id}")
 
                     for video in new_videos:
-                        video_id = f"{video['video_id']}_playlist_{playlist_id}"
+                        video_id = f"{video['video_id']}_{playlist_id}"
 
                         db[video_id] = {
                             'video_id': video_id,
@@ -449,24 +456,31 @@ async def check_playlist_updates():
                             'url': video['url'],
                             'local_path': None,  # Will be downloaded later if needed
                             'folder_name': folder_name,
+                            'folder_path': folder_name,
                             'duration': video['duration'],
                             'uploader': video['uploader'],
                             'added_time': datetime.now().isoformat(),
                             'views_count': 0,
                             'source_type': 'youtube_playlist_auto',
                             'playlist_id': playlist_id,
-                            'username': username
+                            'user_id': username
                         }
 
                     save_db(db)
-                    print(f"Added {len(new_videos)} new videos to playlist {playlist_id}")
+                    print(f"✅ Added {len(new_videos)} new videos to playlist {playlist_id}")
+
+                    # TODO: Implement notification system for new videos
+                    # For now, just print to console
+                    print(f"🔔 Notification: {len(new_videos)} new videos added to '{playlist_info['title']}' playlist")
 
                 # Update last checked
                 playlist_info['last_checked'] = datetime.now().isoformat()
                 playlist_info['video_count'] = len(videos)
 
             except Exception as e:
-                print(f"Error checking playlist {playlist_id}: {e}")
+                print(f"❌ Error checking playlist {playlist_id}: {e}")
+                import traceback
+                traceback.print_exc()
 
     save_playlist_db(playlist_db)
 
@@ -2019,6 +2033,38 @@ async def get_playlists(auth_token: str = Cookie(None)):
         }
 
         return {"playlists": user_playlists}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/playlist_videos")
+async def get_playlist_videos(playlist_id: str, auth_token: str = Cookie(None)):
+    """Get videos from a specific playlist"""
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        from auth import verify_token
+        username = verify_token(auth_token)
+
+        db = load_db()
+        
+        # Get all videos from this playlist that belong to the user
+        playlist_videos = []
+        for video_id, video in db.items():
+            if video.get('playlist_id') == playlist_id and video.get('user_id') == username:
+                playlist_videos.append({
+                    'id': video_id,
+                    'original_video_id': video.get('original_video_id'),
+                    'title': video.get('title'),
+                    'url': video.get('url'),
+                    'duration': video.get('duration'),
+                    'uploader': video.get('uploader'),
+                    'added_time': video.get('added_time')
+                })
+
+        return {"playlist_id": playlist_id, "videos": playlist_videos}
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -259,6 +259,53 @@
         }
 
         /**
+         * Subscribe to a playlist
+         */
+        async subscribeToPlaylist(playlistId, playlistTitle) {
+            // Check if already subscribed
+            const existing = this.subscriptions.find(sub => sub.channelId === playlistId);
+            if (existing) {
+                return existing;
+            }
+
+            try {
+                const response = await fetch(`/api/playlist_videos?playlist_id=${playlistId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    const subscription = {
+                        id: 'sub_' + Date.now(),
+                        channelId: playlistId,
+                        channelName: playlistTitle,
+                        type: 'youtube',
+                        enabled: true,
+                        lastChecked: new Date().toISOString(),
+                        videoCount: data.videos ? data.videos.length : 0,
+                        createdAt: new Date().toISOString()
+                    };
+
+                    this.subscriptions.push(subscription);
+                    this.saveSubscriptions();
+                    console.log('Subscribed to playlist:', playlistId, playlistTitle);
+                    return subscription;
+                }
+            } catch (e) {
+                console.error('Error subscribing to playlist:', e);
+            }
+            
+            return null;
+        }
+
+        /**
+         * Unsubscribe from a playlist
+         */
+        unsubscribeFromPlaylist(playlistId) {
+            this.subscriptions = this.subscriptions.filter(sub => sub.channelId !== playlistId);
+            this.saveSubscriptions();
+            console.log('Unsubscribed from playlist:', playlistId);
+        }
+
+        /**
          * Check subscriptions for new videos
          */
         async checkSubscriptions() {
@@ -268,7 +315,6 @@
                 if (!sub.enabled) continue;
 
                 try {
-                    // Simulate checking (in real app, this would call API)
                     const response = await fetch(`/api/playlist_videos?playlist_id=${sub.channelId}`);
                     
                     if (response.ok) {
@@ -282,7 +328,7 @@
                                 `New videos from ${sub.channelName}`,
                                 `${newVideos} new video${newVideos > 1 ? 's' : ''} added!`,
                                 'video',
-                                '/playlist/' + sub.channelId,
+                                `/folder/${sub.channelId}`, // Link to folder where playlist is stored
                                 sub.channelId
                             );
 

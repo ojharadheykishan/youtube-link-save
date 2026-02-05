@@ -933,6 +933,12 @@
                 loadFolders();
                 setupSearch();
                 initializeAnimations();
+                
+                // Initialize notifications system
+                if (window.notificationsManager) {
+                    console.log('Notifications system initialized');
+                    window.notificationsManager.updateBadge();
+                }
             }, 500);
         });
 
@@ -1159,6 +1165,15 @@
                 return;
             }
 
+            // Validate playlist URL format
+            const playlistPattern = /(?:list=|playlist\?|youtu\.be\/|\/playlist\/)([A-Za-z0-9_-]+)/;
+            if (!playlistPattern.test(playlistUrl)) {
+                showNotification('Please enter a valid YouTube playlist URL', 'error');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                return;
+            }
+
             try {
                 const formData = new FormData();
                 formData.append('playlist_url', playlistUrl);
@@ -1175,15 +1190,32 @@
 
                 if (response.ok && !result.error) {
                     const videoCount = result.total_videos || 0;
-                    showNotification(`✅ Playlist imported successfully! Added ${videoCount} videos for streaming playback.`, 'success');
+                    const message = monitor 
+                        ? `✅ Playlist imported successfully! Added ${videoCount} videos. Will automatically check for updates.`
+                        : `✅ Playlist imported successfully! Added ${videoCount} videos.`;
+                        
+                    showNotification(message, 'success');
+                    
+                    // Subscribe to notifications if monitor is enabled
+                    if (monitor && result.playlist_id) {
+                        if (window.notificationsManager && window.notificationsManager.subscribeToPlaylist) {
+                            window.notificationsManager.subscribeToPlaylist(
+                                result.playlist_id,
+                                document.getElementById('playlistUrl').value.split('list=')[1] || 'Unknown Playlist'
+                            );
+                        }
+                    }
+                    
                     clearPlaylistForm();
                     setTimeout(() => location.reload(), 2000);
                 } else {
                     const errorMsg = result.error || result.detail || 'Unknown error';
                     showNotification('❌ Error importing playlist: ' + errorMsg, 'error');
+                    console.error('Playlist import error:', result);
                 }
             } catch (error) {
-                showNotification('❌ Error importing playlist: ' + error.message, 'error');
+                console.error('Network error:', error);
+                showNotification('❌ Network error. Please check your internet connection and try again.', 'error');
             }
 
             submitBtn.innerHTML = originalText;
@@ -1505,6 +1537,42 @@
             }
         }
 
+        function openNotificationsModal() {
+            // Use the notifications system
+            if (window.toggleNotificationsPanel) {
+                window.toggleNotificationsPanel();
+            } else {
+                // Fallback if notifications system not available
+                const modal = document.createElement('div');
+                modal.className = 'modal active';
+                modal.id = 'notificationsModal';
+                modal.innerHTML = `
+                    <div class="modal-content" style="animation: modalSlideIn 0.3s ease-out; max-width: 400px;">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-bell" style="color: #ffc107; margin-right: 0.5rem;"></i>Notifications</h3>
+                            <button class="modal-close" onclick="closeNotificationsModal()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div style="padding: 1rem; text-align: center; color: var(--text-secondary);">
+                                <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; color: var(--text-secondary);"></i>
+                                <p>No notifications yet</p>
+                                <small style="font-size: 0.85rem;">You'll receive notifications when new videos are added</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+        }
+
+        function closeNotificationsModal() {
+            const modal = document.getElementById('notificationsModal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.remove(), 300);
+            }
+        }
+
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 fetch('/logout', { method: 'POST' })
@@ -1519,6 +1587,7 @@
     </script>
     <script src="/static/js/modern-section.js"></script>
     <script src="/static/js/popup.js"></script>
+    <script src="/static/js/notifications.js"></script>
     
     <!-- AI Creator Animation -->
     <div class="floating-creator">
