@@ -1191,8 +1191,8 @@
                 if (response.ok && !result.error) {
                     const videoCount = result.total_videos || 0;
                     const message = monitor 
-                        ? `✅ Playlist imported successfully! Added ${videoCount} videos. Will automatically check for updates.`
-                        : `✅ Playlist imported successfully! Added ${videoCount} videos.`;
+                        ? `⚡ Playlist imported successfully! Added ${videoCount} videos (FAST MODE). Will automatically check for updates.`
+                        : `⚡ Playlist imported successfully! Added ${videoCount} videos (FAST MODE).`;
                         
                     showNotification(message, 'success');
                     
