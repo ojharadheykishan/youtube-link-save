@@ -39,6 +39,18 @@ SOCIAL_DB = "social_db.json"
 LOCAL_VIDEOS_DIR = "videos"
 
 # Authentication routes
+@app.get("/terms", response_class=HTMLResponse)
+async def terms_of_service(request: Request):
+    """Terms of Service page"""
+    return templates.TemplateResponse("terms.html", {"request": request})
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy_policy(request: Request):
+    """Privacy Policy page"""
+    return templates.TemplateResponse("privacy.html", {"request": request})
+
+
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, error: str = None):
     return templates.TemplateResponse("login.html", {"request": request, "error": error})
