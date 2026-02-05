@@ -7,7 +7,7 @@ admin_token = create_access_token({"sub": "admin"})
 print(f"Generated token: {admin_token}")
 
 # Test the stream API with valid authentication
-url = "http://localhost:3000/api/stream/mdtIznX-gqQ_PLbmKHoPJdhKZqYiylHRJ7YxXRDEx1GjRY"
+url = "http://localhost:10000/api/stream/mdtIznX-gqQ_PLbmKHoPJdhKZqYiylHRJ7YxXRDEx1GjRY"
 headers = {
     "Cookie": f"auth_token={admin_token}"
 }

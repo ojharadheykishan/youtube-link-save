@@ -35,6 +35,7 @@ templates = Jinja2Templates(directory="templates")
 VIDEO_DB = "video_db.json"
 FOLDER_DB = "folder_db.json"
 PLAYLIST_DB = "playlist_db.json"
+SOCIAL_DB = "social_db.json"
 LOCAL_VIDEOS_DIR = "videos"
 
 # Authentication routes
@@ -96,15 +97,15 @@ async def register(
 
 @app.get("/logout")
 async def logout_get(response: Response):
-    response = RedirectResponse("/start", status_code=303)
+    response = RedirectResponse("/", status_code=303)
     response.delete_cookie("auth_token")
     return response
 
 @app.post("/logout")
 async def logout_post(response: Response):
-    # Redirect to start page with proper 303 status to ensure GET request
+    # Redirect to main page with proper 303 status to ensure GET request
     from starlette.responses import RedirectResponse
-    response = RedirectResponse(url="/start", status_code=303)
+    response = RedirectResponse(url="/", status_code=303)
     response.delete_cookie("auth_token")
     return response
 
@@ -190,6 +191,21 @@ def save_playlist_db(db):
             json.dump(db, f, indent=2)
     except OSError as e:
         print(f"Error saving playlist database: {e}")
+        # Return without raising exception - allow app to continue
+
+def load_social_db():
+    try:
+        with open(SOCIAL_DB, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"facebook": "", "whatsapp": "", "instagram": ""}
+
+def save_social_db(db):
+    try:
+        with open(SOCIAL_DB, 'w') as f:
+            json.dump(db, f, indent=2)
+    except OSError as e:
+        print(f"Error saving social database: {e}")
         # Return without raising exception - allow app to continue
 
 async def extract_playlist_videos(playlist_url, username=None):
@@ -548,6 +564,7 @@ async def home(request: Request, auth_token: str = Cookie(None)):
         return RedirectResponse("/login", status_code=302)
 
     db = load_db()
+    social_db = load_social_db()
 
     # Filter videos by current user
     user_videos = [video for video in db.values() if video.get('user_id') == user['username']]
@@ -560,7 +577,8 @@ async def home(request: Request, auth_token: str = Cookie(None)):
         "request": request,
         "folder_hierarchy": folder_hierarchy,
         "videos": user_videos,
-        "current_user": user
+        "current_user": user,
+        "social_db": social_db
     })
 
 @app.get("/dashboard", response_class=HTMLResponse)
@@ -1082,6 +1100,25 @@ async def sync_telegram_channel(channel: str, background_tasks: BackgroundTasks,
         return {"message": f"Syncing channel: {channel}"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/telegram-study", response_class=HTMLResponse)
+async def telegram_study_page(request: Request, auth_token: str = Cookie(None)):
+    """Telegram Study Page - Perfect study interface for Telegram channels"""
+    # Check if user is authenticated
+    if not auth_token:
+        return RedirectResponse("/login", status_code=302)
+
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        if username not in users:
+            return RedirectResponse("/login", status_code=302)
+        user = users[username]
+    except Exception:
+        return RedirectResponse("/login", status_code=302)
+
+    return templates.TemplateResponse("telegram_study.html", {"request": request, "current_user": user})
 
 @app.get("/api/telegram/videos")
 async def get_telegram_videos():
@@ -2334,6 +2371,44 @@ async def api_video_stats(video_id: str):
     from features import get_video_stats, increment_view_count
     increment_view_count(video_id)
     return get_video_stats(video_id)
+
+# Social Media API endpoints
+@app.get("/api/social")
+async def api_get_social_links():
+    """Get social media links"""
+    return load_social_db()
+
+@app.post("/api/social")
+async def api_update_social_links(
+    facebook: str = Form(None),
+    whatsapp: str = Form(None),
+    instagram: str = Form(None),
+    auth_token: str = Cookie(None)
+):
+    """Update social media links (admin only)"""
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    try:
+        from auth import verify_token, load_users
+        username = verify_token(auth_token)
+        users = load_users()
+        if username not in users or users[username].get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Not authorized")
+    except:
+        raise HTTPException(status_code=401, detail="Invalid auth")
+    
+    social_db = load_social_db()
+    
+    if facebook is not None:
+        social_db["facebook"] = facebook
+    if whatsapp is not None:
+        social_db["whatsapp"] = whatsapp
+    if instagram is not None:
+        social_db["instagram"] = instagram
+    
+    save_social_db(social_db)
+    return {"message": "Social media links updated successfully", "data": social_db}
 
 # SECURITY
 @app.post("/api/folder/password")

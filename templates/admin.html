@@ -410,6 +410,29 @@
             </div>
 
             <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+                <h3>Social Media Settings</h3>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label><strong>Facebook URL:</strong></label>
+                    <input type="text" id="facebook-url" placeholder="https://facebook.com/yourpage" style="padding: 0.5rem; width: 300px; border: 1px solid var(--border-color); border-radius: 4px;">
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label><strong>WhatsApp URL:</strong></label>
+                    <input type="text" id="whatsapp-url" placeholder="https://wa.me/yournumber" style="padding: 0.5rem; width: 300px; border: 1px solid var(--border-color); border-radius: 4px;">
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label><strong>Instagram URL:</strong></label>
+                    <input type="text" id="instagram-url" placeholder="https://instagram.com/yourpage" style="padding: 0.5rem; width: 300px; border: 1px solid var(--border-color); border-radius: 4px;">
+                </div>
+                
+                <button onclick="saveSocialSettings()" style="padding: 0.75rem 1.5rem; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                    <i class="fas fa-save"></i> Save Social Media Settings
+                </button>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
                 <h3>Database Management</h3>
                 
                 <div style="display: flex; gap: 1rem;">
@@ -483,6 +506,11 @@
 
             // Load data for the section
             loadSectionData(sectionName);
+            
+            // Load social settings if settings section is shown
+            if (sectionName === 'settings') {
+                loadSocialSettings();
+            }
         }
 
         async function loadSectionData(section) {
@@ -742,6 +770,46 @@
                 console.error('Error resetting database:', error);
                 alert('Error resetting database');
             }
+        }
+
+        async function saveSocialSettings() {
+            try {
+                const facebook = document.getElementById('facebook-url').value;
+                const whatsapp = document.getElementById('whatsapp-url').value;
+                const instagram = document.getElementById('instagram-url').value;
+                
+                const formData = new FormData();
+                if (facebook) formData.append('facebook', facebook);
+                if (whatsapp) formData.append('whatsapp', whatsapp);
+                if (instagram) formData.append('instagram', instagram);
+                
+                const response = await fetch("/api/social", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    alert('Social media settings saved successfully!');
+                } else {
+                    const data = await response.json();
+                    alert(`Error: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error('Error saving social settings:', error);
+                alert('An error occurred while saving social media settings');
+            }
+        }
+
+        // Load social media settings when settings section is shown
+        function loadSocialSettings() {
+            fetch("/api/social")
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('facebook-url').value = data.facebook || '';
+                    document.getElementById('whatsapp-url').value = data.whatsapp || '';
+                    document.getElementById('instagram-url').value = data.instagram || '';
+                })
+                .catch(error => console.error('Error loading social settings:', error));
         }
 
         // Search functionality

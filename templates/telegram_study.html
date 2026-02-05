@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Study - VideoHub</title>
+    <link rel="stylesheet" href="/static/css/youtube.css">
+    <link rel="stylesheet" href="/static/css/telegram-study.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0088cc">
+    <meta name="description" content="Telegram Channel Study - Your Personal Video Library">
+</head>
+<body>
+    <!-- Header -->
+    <header class="study-header">
+        <div class="header-left">
+            <a href="/" class="logo">
+                <div class="logo-icon"><i class="fas fa-play-circle"></i></div>
+                <span class="logo-text">VideoHub</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <button class="back-btn" onclick="toggleTheme()" id="themeToggle"><i class="fas fa-moon"></i> Theme</button>
+            <button class="back-btn" onclick="showWatchHistory()"><i class="fas fa-history"></i> History</button>
+            <a href="/dashboard" class="back-btn"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="/" class="back-btn"><i class="fas fa-home"></i> Home</a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="study-container">
+        
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <div class="hero-icon"><i class="fab fa-telegram"></i></div>
+                <h1 class="hero-title">Telegram Channel Study</h1>
+                <p class="hero-subtitle">Import, study & cache videos from Telegram channels. Even deleted videos stay playable!</p>
+            </div>
+        </section>
+
+        <!-- Configuration Section -->
+        <section class="config-section">
+            <div class="config-header">
+                <div class="config-icon"><i class="fas fa-cog"></i></div>
+                <div>
+                    <h3 class="config-title">Channel Configuration</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Enter Telegram credentials and channel</p>
+                </div>
+            
+            <form id="telegramForm">
+                <div class="config-grid">
+                    <div class="form-group">
+                        <label><i class="fab fa-telegram"></i> Channel Username</label>
+                        <input type="text" id="channelUsername" placeholder="@channel_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-key"></i> API ID</label>
+                        <input type="text" id="apiId" placeholder="From my.telegram.org">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> API Hash</label>
+                        <input type="text" id="apiHash" placeholder="From my.telegram.org">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-folder"></i> Save To Folder</label>
+                        <select id="saveFolder"><option value="">Select folder...</option></select>
+                    </div>
+                
+                <div class="config-actions">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-sync"></i> Fetch Videos</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()"><i class="fas fa-redo"></i> Reset</button>
+                </div>
+            </form>
+            
+            <!-- Saved Channels -->
+            <div class="saved-channels">
+                <h4><i class="fas fa-bookmark"></i> Saved Channels</h4>
+                <div class="channels-list" id="savedChannels">
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">No saved channels yet</p>
+                </div>
+        </section>
+
+        <!-- Search & Filter Bar -->
+        <div class="filter-bar" id="filterBar" style="display: none;">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search videos...">
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn active" onclick="setFilter('all')">All</button>
+                <button class="filter-btn" onclick="setFilter('short')">< 5 min</button>
+                <button class="filter-btn" onclick="setFilter('long')">> 5 min</button>
+            </div>
+            <div class="sort-group">
+                <button class="sort-btn active" onclick="setSort('date')" id="sortDate">Newest</button>
+                <button class="sort-btn" onclick="setSort('views')" id="sortViews">Popular</button>
+                <button class="sort-btn" onclick="setSort('duration')" id="sortDuration">Duration</button>
+            </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="statsBar" style="display: none;">
+            <div class="stats-left">
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fab fa-telegram" style="color: var(--telegram-primary);"></i></div>
+                    <div class="stat-info"><h4 id="channelName">Channel</h4><p id="channelDisplay">@channel</p></div>
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-video" style="color: var(--success);"></i></div>
+                    <div class="stat-info"><h4 id="videoCount">0</h4><p>Videos</p></div>
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-save" style="color: var(--warning);"></i></div>
+                    <div class="stat-info"><h4 id="savedCount">0</h4><p>Saved</p></div>
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-database" style="color: #9c27b0;"></i></div>
+                    <div class="stat-info"><h4 id="cachedCount">0</h4><p>Cached</p></div>
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-history" style="color: #ff9800;"></i></div>
+                    <div class="stat-info"><h4 id="historyCount">0</h4><p>Watched</p></div>
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-star" style="color: #ffc107;"></i></div>
+                    <div class="stat-info"><h4 id="ratingCount">0</h4><p>Rated</p></div>
+            </div>
+            <div class="stats-right">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="autoPlayToggle" onchange="toggleAutoPlay()">
+                    <span>Auto-play</span>
+                </label>
+            </div>
+
+        <!-- Video Section -->
+        <section class="video-section" id="videoSection" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Channel Videos <span class="video-count" id="videoSectionCount">(0)</span></h2>
+            </div>
+            <div class="videos-grid" id="videosGrid"></div>
+        </section>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon"><i class="fab fa-telegram"></i></div>
+            <h3 class="empty-title">No Channel Selected</h3>
+            <p class="empty-description">Enter a Telegram channel username and click "Fetch Videos"</p>
+            <div style="display: flex; justify-content: center; gap: 1rem;">
+                <a href="/" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Home</a>
+                <a href="/dashboard" class="btn btn-primary"><i class="fas fa-th-large"></i> Dashboard</a>
+            </div>
+
+    </main>
+
+    <!-- Powerful Player Modal -->
+    <div id="playerModal" class="modal">
+        <div class="player-modal-content">
+            <div class="player-header">
+                <h3 id="playerTitle">Video Player</h3>
+                <button class="close-btn" onclick="closePlayer()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="player-container" id="playerContainer">
+                <video id="powerfulPlayer" controls preload="auto"></video>
+            </div>
+            <div class="player-controls">
+                <div class="control-row">
+                    <button class="ctrl-btn" onclick="playerSkip(-10)"><i class="fas fa-undo"></i> 10s</button>
+                    <button class="ctrl-btn" onclick="playerSkip(10)"><i class="fas fa-redo"></i> 10s</button>
+                    <button class="ctrl-btn" onclick="playerSpeed(0.5)">0.5x</button>
+                    <button class="ctrl-btn active" onclick="playerSpeed(1)">1x</button>
+                    <button class="ctrl-btn" onclick="playerSpeed(1.5)">1.5x</button>
+                    <button class="ctrl-btn" onclick="playerSpeed(2)">2x</button>
+                </div>
+                <div class="control-row">
+                    <button class="ctrl-btn" onclick="toggleFullscreen()"><i class="fas fa-expand"></i> Full</button>
+                    <button class="ctrl-btn" onclick="togglePiP()"><i class="fas fa-window-restore"></i> PiP</button>
+                    <button class="ctrl-btn" onclick="captureScreenshot()"><i class="fas fa-camera"></i> Snap</button>
+                    <button class="ctrl-btn" onclick="toggleLoop()" id="loopBtn"><i class="fas fa-redo"></i> Loop</button>
+                </div>
+            <div class="player-info">
+                <span id="playerChannel">Channel: -</span>
+                <span id="playerViews">Views: -</span>
+                <span id="playerStatus"></span>
+            </div>
+            <!-- Comments Section -->
+            <div class="comments-section">
+                <h4><i class="fas fa-comments"></i> Comments</h4>
+                <div class="comment-input">
+                    <input type="text" id="commentInput" placeholder="Add a comment...">
+                    <button class="btn btn-primary" onclick="addCurrentComment()">Post</button>
+                </div>
+                <div id="commentsList" class="comments-list"></div>
+        </div>
+
+    <!-- Floating Creator Badge -->
+    <div class="floating-creator">
+        <img src="/static/images/ai-character.svg" alt="AI" class="floating-creator-img">
+        <span class="floating-creator-text">Made By Radhey Kishan Ojha</span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/telegram-study.js"></script>
+    <script>
+        // Additional functions
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('telegram_theme', currentTheme);
+            document.getElementById('themeToggle').innerHTML = currentTheme === 'dark' ? '<i class="fas fa-moon"></i> Theme' : '<i class="fas fa-sun"></i> Theme';
+        }
+        
+        function loadTheme() {
+            currentTheme = localStorage.getItem('telegram_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+        }
+        
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderVideos();
+        }
+        
+        function setSort(sort) {
+            currentSort = sort;
+            document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderVideos();
+        }
+        
+        function toggleAutoPlay() {
+            autoPlay = document.getElementById('autoPlayToggle').checked;
+            localStorage.setItem('telegram_autoplay', autoPlay);
+        }
+        
+        function showWatchHistory() {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="player-modal-content" style="max-width:700px;max-height:80vh;overflow-y:auto;">
+                    <div class="player-header"><h3><i class="fas fa-history"></i> Watch History</h3><button class="close-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button></div>
+                    <div style="padding:1rem;">
+                        ${watchHistory.length === 0 ? '<p>No watch history yet.</p>' : 
+                          watchHistory.map(v => `<div class="history-item" onclick="openPlayer('${v.id}');this.closest('.modal').remove()">
+                            <img src="${v.thumbnail}"><div><h4>${v.title}</h4><p>${v.watchedAt}</p></div>`).join('')}
+                    </div>`;
+            document.body.appendChild(modal);
+        }
+        
+        function renderComments(videoId) {
+            const comments = getComments(videoId);
+            const list = document.getElementById('commentsList');
+            list.innerHTML = comments.length === 0 ? '<p class="no-comments">No comments yet.</p>' : 
+                comments.slice(0, 10).map(c => `<div class="comment-item"><span class="comment-text">${c.comment}</span><span class="comment-date">${new Date(c.createdAt).toLocaleDateString()}</span></div>`).join('');
+        }
+        
+        function addCurrentComment() {
+            const input = document.getElementById('commentInput');
+            if (input.value.trim() && currentPlayingVideo) {
+                addComment(currentPlayingVideo.id, input.value.trim());
+                renderComments(currentPlayingVideo.id);
+                input.value = '';
+            }
+        }
+        
+        function getComments(videoId) {
+            return (userComments[videoId] || []).slice(0, 10);
+        }
+        
+        function addComment(videoId, comment) {
+            if (!userComments[videoId]) userComments[videoId] = [];
+            userComments[videoId].unshift({ comment: comment, createdAt: new Date().toISOString() });
+            localStorage.setItem('telegram_comments', JSON.stringify(userComments));
+            showNotification('💬 Comment added!', 'success');
+        }
+        
+        function getRating(videoId) {
+            return userRatings[videoId]?.rating || 0;
+        }
+        
+        function rateVideo(videoId, rating) {
+            userRatings[videoId] = { rating: rating, ratedAt: new Date().toISOString() };
+            localStorage.setItem('telegram_ratings', JSON.stringify(userRatings));
+            showNotification(`⭐ Rated ${rating} stars!`, 'success');
+            renderVideos();
+        }
+        
+        function updateStats() {
+            document.getElementById('videoCount').textContent = channelVideos.length;
+            document.getElementById('channelName').textContent = formatChannelName(currentChannel || '');
+            document.getElementById('channelDisplay').textContent = currentChannel || '';
+            document.getElementById('savedCount').textContent = savedVideos.size;
+            document.getElementById('cachedCount').textContent = Object.keys(videoCache).length;
+            document.getElementById('historyCount').textContent = watchHistory.length;
+            document.getElementById('ratingCount').textContent = Object.keys(userRatings).length;
+            document.getElementById('statsBar').style.display = 'flex';
+            document.getElementById('filterBar').style.display = 'flex';
+        }
+        
+        function renderVideos() {
+            const grid = document.getElementById('videosGrid');
+            const filtered = filterVideos(channelVideos);
+            document.getElementById('videoSectionCount').textContent = `(${filtered.length} videos)`;
+            document.getElementById('videoSection').style.display = filtered.length ? 'block' : 'none';
+            document.getElementById('emptyState').style.display = filtered.length ? 'none' : 'block';
+            
+            grid.innerHTML = filtered.map(video => `
+                <div class="video-card ${video.deletedFromChannel ? 'cached' : ''}" data-id="${video.id}" onclick="openPlayer('${video.id}')">
+                    <div class="video-thumbnail">
+                        <img src="${video.thumbnail}" alt="${video.title}" onerror="this.src='https://picsum.photos/320/180?text=Video'">
+                        <div class="thumbnail-overlay"><div class="play-btn"><i class="fas fa-play"></i></div>
+                        <div class="video-duration">${formatDuration(video.duration)}</div>
+                        ${video.deletedFromChannel ? '<div class="cached-badge"><i class="fas fa-download"></i> Cached</div>' : ''}
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">${video.title}</div>
+                        <div class="video-meta">
+                            <span><i class="fas fa-eye"></i> ${formatViews(video.views)}</span>
+                            <span><i class="far fa-calendar"></i> ${video.date}</span>
+                        </div>
+                        <div class="rating-stars">
+                            ${[1,2,3,4,5].map(i => `<span class="star ${i <= getRating(video.id) ? 'filled' : ''}" onclick="event.stopPropagation(); rateVideo('${video.id}', ${i})">★</span>`).join('')}
+                        </div>
+                        <div class="video-actions">
+                            <button class="video-action-btn" onclick="event.stopPropagation(); openPlayer('${video.id}')"><i class="fas fa-play"></i> Play</button>
+                            <button class="video-action-btn" onclick="event.stopPropagation(); saveVideo('${video.id}')"><i class="fas fa-save"></i> Save</button>
+                            <button class="video-action-btn" onclick="event.stopPropagation(); shareVideo('${video.id}')"><i class="fas fa-share"></i> Share</button>
+                        </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterVideos(videos) {
+            let filtered = videos;
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput && searchInput.value) {
+                const query = searchInput.value.toLowerCase();
+                filtered = filtered.filter(v => v.title.toLowerCase().includes(query));
+            }
+            if (currentFilter === 'short') filtered = filtered.filter(v => v.duration < 300);
+            if (currentFilter === 'long') filtered = filtered.filter(v => v.duration >= 300);
+            filtered.sort((a, b) => {
+                if (currentSort === 'date') return new Date(b.date) - new Date(a.date);
+                if (currentSort === 'views') return (b.views || 0) - (a.views || 0);
+                if (currentSort === 'duration') return (b.duration || 0) - (a.duration || 0);
+                return 0;
+            });
+            return filtered;
+        }
+        
+        function shareVideo(videoId) {
+            const video = channelVideos.find(v => v.id === videoId);
+            if (navigator.share) {
+                navigator.share({ title: video?.title, url: window.location.href });
+            } else {
+                navigator.clipboard.writeText(`${video?.title} - ${window.location.href}`);
+                showNotification('📋 Link copied!', 'success');
+            }
+        }
+        
+        function formatChannelName(c) { return c ? c.replace('@','').replace('https://t.me/','').trim() : 'Telegram'; }
+        function formatDuration(s) { return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`; }
+        function formatViews(v) { if(v>=1000000)return(v/1000000).toFixed(1)+'M'; if(v>=1000)return(v/1000).toFixed(1)+'K'; return v.toString(); }
+        
+        function addToWatchHistory(video) {
+            watchHistory = watchHistory.filter(v => v.id !== video.id);
+            watchHistory.unshift({ ...video, watchedAt: new Date().toISOString() });
+            watchHistory = watchHistory.slice(0, 50);
+            localStorage.setItem('telegram_watch_history', JSON.stringify(watchHistory));
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            const autoPlayToggle = document.getElementById('autoPlayToggle');
+            if (autoPlayToggle) {
+                autoPlayToggle.checked = localStorage.getItem('telegram_autoplay') === 'true';
+                autoPlay = autoPlayToggle.checked;
+            }
+            setupSearch();
+        });
+        
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', renderVideos);
+            }
+        }
+        
+        function clearForm() {
+            document.getElementById('telegramForm').reset();
+            localStorage.removeItem('last_telegram_channel');
+            currentChannel = null;
+            channelVideos = [];
+            document.getElementById('statsBar').style.display = 'none';
+            document.getElementById('filterBar').style.display = 'none';
+            document.getElementById('videoSection').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+            showNotification('Form cleared', 'info');
+        }
+    </script>
+</body>
+</html>

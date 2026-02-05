@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+ i<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VideoHub - Modern YouTube Style Video Library</title>
@@ -371,6 +371,39 @@
             background: linear-gradient(45deg, #ee5a24, #ff6b6b);
         }
 
+        /* Social Media Links */
+        .vh-social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            animation: slideUp 1s ease-out 0.8s both;
+        }
+
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .social-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .social-link i {
+            font-size: 1.2rem;
+        }
+
         /* Responsive improvements */
         @media (max-width: 768px) {
             .hero-title {
@@ -388,6 +421,19 @@
                 width: 50px;
                 height: 50px;
                 font-size: 20px;
+            }
+
+            .vh-social-links {
+                gap: 0.75rem;
+            }
+
+            .social-link {
+                width: 45px;
+                height: 45px;
+            }
+
+            .social-link i {
+                font-size: 1rem;
             }
         }
     </style>
@@ -445,6 +491,19 @@
                             Register
                         </button>
                     {% endif %}
+                </div>
+                
+                <!-- Social Media Links -->
+                <div class="vh-social-links">
+                    <a href="{{ social_db.facebook }}" target="_blank" class="social-link" title="Facebook" {% if not social_db.facebook %}style="display: none;"{% endif %}>
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="{{ social_db.whatsapp }}" target="_blank" class="social-link" title="WhatsApp" {% if not social_db.whatsapp %}style="display: none;"{% endif %}>
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                    <a href="{{ social_db.instagram }}" target="_blank" class="social-link" title="Instagram" {% if not social_db.instagram %}style="display: none;"{% endif %}>
+                        <i class="fab fa-instagram"></i>
+                    </a>
                 </div>
             </div>
         </div>
@@ -509,6 +568,18 @@
                 <a href="/features" class="sidebar-item">
                     <i class="fas fa-cubes"></i>
                     <span>Features</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <a href="/telegram-study" target="_blank" class="sidebar-item" title="Telegram Study - Open in new tab">
+                    <i class="fab fa-telegram"></i>
+                    <span>Telegram Study</span>
+                    <i class="fas fa-external-link-alt" style="margin-left: auto; font-size: 0.75rem; opacity: 0.6;"></i>
+                </a>
+                <a href="/telegram" class="sidebar-item" title="Telegram Sync">
+                    <i class="fas fa-sync"></i>
+                    <span>Telegram Sync</span>
                 </a>
             </div>
 
