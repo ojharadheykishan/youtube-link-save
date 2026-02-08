@@ -1090,7 +1090,7 @@
                 <div class="videos-grid" id="thumbnailView">
                     {% if videos %}
                         {% for video in videos %}
-                            <div class="video-card" data-title="{{ video.title }}" data-added-time="{{ video.added_time }}" data-views="{{ video.views_count or 0 }}" data-uploader="{{ video.uploader or 'Unknown' }}">
+                            <div class="video-card" data-title="{{ video.title }}" data-added-time="{{ video.added_time }}" data-views="{{ video.views_count or 0 }}" data-uploader="{{ video.uploader or 'Unknown' }}" data-folder="{{ video.folder_name or 'Uncategorized' }}">
                                 <a href="/watch/{{ video.video_id }}" class="video-thumbnail-link">
                                     <div class="video-thumbnail">
                                         {% if video.local_path %}
@@ -1169,7 +1169,7 @@
                 <div class="list-view" id="listView">
                     {% if videos %}
                         {% for video in videos %}
-                            <div class="video-item" data-title="{{ video.title }}" data-added-time="{{ video.added_time }}" data-views="{{ video.view_count or 0 }}" data-uploader="{{ video.uploader or 'Unknown' }}">
+                            <div class="video-item" data-title="{{ video.title }}" data-added-time="{{ video.added_time }}" data-views="{{ video.view_count or 0 }}" data-uploader="{{ video.uploader or 'Unknown' }}" data-folder="{{ video.folder_name or 'Uncategorized' }}">
                                 <img src="{% if 'thumbnails' in (video.thumbnail_path or '') %}{{ '/' + video.thumbnail_path }}{% else %}https://img.youtube.com/vi/{{ (video.original_video_id or video.video_id).split('_')[0] }}/maxresdefault.jpg{% endif %}" alt="{{ video.title }}" class="video-thumbnail">
                                 <div class="video-info">
                                     <h3 class="video-title">{{ video.title }}</h3>
@@ -2092,21 +2092,36 @@
             });
             event.target.classList.add('active');
 
-            // Hide all views
-            document.getElementById('thumbnailView').style.display = 'none';
-            document.getElementById('listView').style.display = 'none';
-            document.getElementById('channelView').style.display = 'none';
+            // Hide all views and update container classes
+            const contentArea = document.querySelector('.content-area');
+            const thumbnailView = document.getElementById('thumbnailView');
+            const listView = document.getElementById('listView');
+            const channelView = document.getElementById('channelView');
 
-            // Show selected view
+            thumbnailView.style.display = 'none';
+            listView.style.display = 'none';
+            channelView.style.display = 'none';
+
+            contentArea.classList.remove('thumbnails-view', 'list-view', 'channel-view');
+
+            // Show selected view and apply styles
             switch (viewType) {
                 case 'thumbnail':
-                    document.getElementById('thumbnailView').style.display = 'grid';
+                    thumbnailView.style.display = 'grid';
+                    thumbnailView.style.gridTemplateColumns = 'repeat(auto-fill, minmax(300px, 1fr))';
+                    thumbnailView.style.gap = '1.5rem';
+                    thumbnailView.style.padding = '1rem';
+                    contentArea.classList.add('thumbnails-view');
                     break;
                 case 'list':
-                    document.getElementById('listView').style.display = 'block';
+                    listView.style.display = 'block';
+                    listView.style.padding = '1rem';
+                    contentArea.classList.add('list-view');
                     break;
                 case 'channel':
-                    document.getElementById('channelView').style.display = 'block';
+                    channelView.style.display = 'block';
+                    channelView.style.padding = '1rem';
+                    contentArea.classList.add('channel-view');
                     loadChannelView();
                     break;
             }
@@ -2116,15 +2131,19 @@
             const channelView = document.getElementById('channelView');
             const videos = Array.from(document.querySelectorAll('#thumbnailView .video-card'));
 
-            // Group videos by uploader/channel
+            // Group videos by channel and then by folder
             const channels = {};
             videos.forEach(video => {
-                // Extract uploader from data-uploader attribute (we should add this to video-card)
-                const uploader = video.dataset.uploader || 'Unknown Channel';
-                if (!channels[uploader]) {
-                    channels[uploader] = [];
+                const channel = video.dataset.uploader || 'Unknown Channel';
+                const folder = video.dataset.folder || 'Uncategorized';
+                
+                if (!channels[channel]) {
+                    channels[channel] = {};
                 }
-                channels[uploader].push(video.cloneNode(true));
+                if (!channels[channel][folder]) {
+                    channels[channel][folder] = [];
+                }
+                channels[channel][folder].push(video.cloneNode(true));
             });
 
             // Clear existing content
@@ -2135,6 +2154,7 @@
                 const channelGroup = document.createElement('div');
                 channelGroup.className = 'channel-group';
 
+                // Channel header
                 const channelHeader = document.createElement('div');
                 channelHeader.className = 'channel-header';
 
@@ -2144,23 +2164,39 @@
 
                 const channelInfo = document.createElement('div');
                 channelInfo.className = 'channel-info';
+                const totalVideos = Object.values(channels[channelName]).reduce((sum, folderVideos) => sum + folderVideos.length, 0);
                 channelInfo.innerHTML = `
                     <h3>${channelName}</h3>
-                    <p>${channels[channelName].length} video${channels[channelName].length !== 1 ? 's' : ''}</p>
+                    <p>${totalVideos} video${totalVideos !== 1 ? 's' : ''} in ${Object.keys(channels[channelName]).length} folder${Object.keys(channels[channelName]).length !== 1 ? 's' : ''}</p>
                 `;
 
                 channelHeader.appendChild(channelAvatar);
                 channelHeader.appendChild(channelInfo);
+                channelGroup.appendChild(channelHeader);
 
-                const channelVideos = document.createElement('div');
-                channelVideos.className = 'channel-videos';
+                // Folder groups
+                Object.keys(channels[channelName]).forEach(folderName => {
+                    const folderGroup = document.createElement('div');
+                    folderGroup.className = 'folder-group';
 
-                channels[channelName].forEach(video => {
-                    channelVideos.appendChild(video);
+                    const folderHeader = document.createElement('div');
+                    folderHeader.className = 'folder-header';
+                    folderHeader.innerHTML = `
+                        <h4><i class="fas fa-folder"></i> ${folderName} (${channels[channelName][folderName].length})</h4>
+                    `;
+
+                    const folderVideos = document.createElement('div');
+                    folderVideos.className = 'folder-videos';
+
+                    channels[channelName][folderName].forEach(video => {
+                        folderVideos.appendChild(video);
+                    });
+
+                    folderGroup.appendChild(folderHeader);
+                    folderGroup.appendChild(folderVideos);
+                    channelGroup.appendChild(folderGroup);
                 });
 
-                channelGroup.appendChild(channelHeader);
-                channelGroup.appendChild(channelVideos);
                 channelView.appendChild(channelGroup);
             });
         }
