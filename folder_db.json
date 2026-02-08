@@ -54,5 +54,12 @@
     "parent_path": "",
     "user_id": "admin",
     "created_time": "2026-02-08T09:28:14.974141"
+  },
+  "Test Admin Playlist": {
+    "name": "Test Admin Playlist",
+    "path": "Test Admin Playlist",
+    "parent_path": "",
+    "user_id": "admin",
+    "created_time": "2026-02-08T09:46:08.861671"
   }
 }

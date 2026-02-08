@@ -1090,7 +1090,7 @@
                 <div class="videos-grid" id="thumbnailView">
                     {% if videos %}
                         {% for video in videos %}
-                            <div class="video-card">
+                            <div class="video-card" data-title="{{ video.title }}" data-added-time="{{ video.added_time }}" data-views="{{ video.views_count or 0 }}" data-uploader="{{ video.uploader or 'Unknown' }}">
                                 <a href="/watch/{{ video.video_id }}" class="video-thumbnail-link">
                                     <div class="video-thumbnail">
                                         {% if video.local_path %}
@@ -1169,7 +1169,7 @@
                 <div class="list-view" id="listView">
                     {% if videos %}
                         {% for video in videos %}
-                            <div class="video-item" data-title="{{ video.title }}" data-added-time="{{ video.added_time }}" data-views="{{ video.view_count or 0 }}">
+                            <div class="video-item" data-title="{{ video.title }}" data-added-time="{{ video.added_time }}" data-views="{{ video.view_count or 0 }}" data-uploader="{{ video.uploader or 'Unknown' }}">
                                 <img src="{% if 'thumbnails' in (video.thumbnail_path or '') %}{{ '/' + video.thumbnail_path }}{% else %}https://img.youtube.com/vi/{{ (video.original_video_id or video.video_id).split('_')[0] }}/maxresdefault.jpg{% endif %}" alt="{{ video.title }}" class="video-thumbnail">
                                 <div class="video-info">
                                     <h3 class="video-title">{{ video.title }}</h3>
@@ -2119,7 +2119,8 @@
             // Group videos by uploader/channel
             const channels = {};
             videos.forEach(video => {
-                const uploader = video.querySelector('.video-title').textContent.split(' - ')[0] || 'Unknown Channel';
+                // Extract uploader from data-uploader attribute (we should add this to video-card)
+                const uploader = video.dataset.uploader || 'Unknown Channel';
                 if (!channels[uploader]) {
                     channels[uploader] = [];
                 }
