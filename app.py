@@ -400,8 +400,19 @@ async def add_playlist(playlist_url, folder_name, username, monitor=False):
     # Process videos in bulk for speed
     videos_to_add = []
     for video in videos:
+        # Check if video already exists for this specific user
+        video_exists = False
         video_id = f"{video['video_id']}_{playlist_id}"
-        if video_id not in db:
+        
+        if video_id in db:
+            # Check if existing video belongs to current user
+            if db[video_id].get('user_id') == username:
+                video_exists = True
+            else:
+                # Video exists for another user, generate a new unique ID for current user
+                video_id = f"{video['video_id']}_{playlist_id}_{username}"
+        
+        if not video_exists:
             videos_to_add.append({
                 'video_id': video_id,
                 'original_video_id': video['video_id'],

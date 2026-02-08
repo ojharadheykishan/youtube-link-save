@@ -473,6 +473,219 @@
             font-size: 1.2rem;
         }
 
+        /* Video Controls Styles */
+        .videos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .videos-controls {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .control-group select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-group select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .control-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.2);
+        }
+
+        .view-options {
+            display: flex;
+            gap: 0.25rem;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .view-btn {
+            padding: 0.5rem 0.75rem;
+            border: none;
+            background: var(--bg-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .view-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        .view-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .view-btn i {
+            font-size: 1rem;
+        }
+
+        /* List View Styles */
+        .list-view {
+            display: none;
+        }
+
+        .list-view .video-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        .list-view .video-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-view .video-thumbnail {
+            width: 120px;
+            height: 68px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .list-view .video-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .list-view .video-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .list-view .video-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .list-view .video-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .list-view .action-btn {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .list-view .play-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .list-view .like-btn {
+            background: #e91e63;
+            color: white;
+        }
+
+        .list-view .delete-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        /* Channel View Styles */
+        .channel-view {
+            display: none;
+        }
+
+        .channel-group {
+            margin-bottom: 2rem;
+        }
+
+        .channel-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .channel-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .channel-info h3 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+        }
+
+        .channel-info p {
+            margin: 0.25rem 0 0 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .channel-videos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
         /* Responsive improvements */
         @media (max-width: 768px) {
             .hero-title {
@@ -503,6 +716,32 @@
 
             .social-link i {
                 font-size: 1rem;
+            }
+
+            .videos-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .videos-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .control-group {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .list-view .video-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .list-view .video-thumbnail {
+                width: 100%;
+                height: 200px;
             }
         }
     </style>
@@ -585,6 +824,13 @@
 
     <!-- Header -->
     <header>
+        <!-- Mobile menu button -->
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        
         <a href="/" class="logo">
             <i class="fas fa-play-circle"></i>
             <span>VideoHub</span>
@@ -592,6 +838,20 @@
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="Search videos..." autocomplete="off">
         </div>
+    </header>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <ul>
+            <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="/videos"><i class="fas fa-video"></i> Videos</a></li>
+            <li><a href="/playlists"><i class="fas fa-list"></i> Playlists</a></li>
+            <li><a href="/folders"><i class="fas fa-folder"></i> Folders</a></li>
+            <li><a href="/terms"><i class="fas fa-file-contract"></i> Terms of Service</a></li>
+            <li><a href="/privacy"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
+            <li><a href="/contact"><i class="fas fa-envelope"></i> Contact</a></li>
+        </ul>
+    </div>
         <div class="header-actions">
             {% if current_user %}
             {% if current_user.role == "admin" %}
@@ -792,10 +1052,42 @@
                 </div>
             </section>
             <section id="videos">
-                <h2 class="section-title">
-                    <i class="fas fa-video"></i> Latest Videos
-                </h2>
-                <div class="videos-grid" id="allVideosGrid">
+                <div class="videos-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-video"></i> Latest Videos
+                    </h2>
+                    <div class="videos-controls">
+                        <!-- Sorting Options -->
+                        <div class="control-group">
+                            <label for="sortSelect">Sort by:</label>
+                            <select id="sortSelect" onchange="sortVideos()">
+                                <option value="newest">New to Old</option>
+                                <option value="oldest">Old to New</option>
+                                <option value="title">Title A-Z</option>
+                                <option value="views">Most Viewed</option>
+                            </select>
+                        </div>
+
+                        <!-- View Options -->
+                        <div class="control-group">
+                            <label>View:</label>
+                            <div class="view-options">
+                                <button class="view-btn active" onclick="setView('thumbnail')" title="Thumbnail View">
+                                    <i class="fas fa-th"></i>
+                                </button>
+                                <button class="view-btn" onclick="setView('list')" title="List View">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                                <button class="view-btn" onclick="setView('channel')" title="Channel-wise View">
+                                    <i class="fas fa-tv"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thumbnail View (Default) -->
+                <div class="videos-grid" id="thumbnailView">
                     {% if videos %}
                         {% for video in videos %}
                             <div class="video-card">
@@ -871,6 +1163,48 @@
                             {% endif %}
                         </div>
                     {% endif %}
+                </div>
+
+                <!-- List View -->
+                <div class="list-view" id="listView">
+                    {% if videos %}
+                        {% for video in videos %}
+                            <div class="video-item" data-title="{{ video.title }}" data-added-time="{{ video.added_time }}" data-views="{{ video.view_count or 0 }}">
+                                <img src="{% if 'thumbnails' in (video.thumbnail_path or '') %}{{ '/' + video.thumbnail_path }}{% else %}https://img.youtube.com/vi/{{ (video.original_video_id or video.video_id).split('_')[0] }}/maxresdefault.jpg{% endif %}" alt="{{ video.title }}" class="video-thumbnail">
+                                <div class="video-info">
+                                    <h3 class="video-title">{{ video.title }}</h3>
+                                    <div class="video-meta">
+                                        <span class="video-uploader">{{ video.uploader or 'Unknown' }}</span> •
+                                        <span class="video-date">{{ video.upload_date_formatted or 'Unknown date' }}</span> •
+                                        <span class="video-views">{{ video.view_count_formatted or '0' }} views</span> •
+                                        <span class="video-duration">{{ video.duration_formatted or '00:00' }}</span>
+                                    </div>
+                                </div>
+                                <div class="video-actions">
+                                    <a href="/watch/{{ video.video_id }}" class="action-btn play-btn" title="Play Video">
+                                        <i class="fas fa-play"></i>
+                                    </a>
+                                    <button class="action-btn like-btn" title="Like Video" onclick="likeVideo('{{ video.video_id }}')">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                    <button class="action-btn delete-btn" title="Delete Video" onclick="deleteVideo('{{ video.video_id }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-videos">
+                            <i class="fas fa-video-slash"></i>
+                            <h3>No videos yet</h3>
+                            <p>Add your first video to get started!</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Channel View -->
+                <div class="channel-view" id="channelView">
+                    <!-- Channel groups will be populated by JavaScript -->
                 </div>
             </section>
 
@@ -990,6 +1324,40 @@
 
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/pwa.js"></script>
+    <script>
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        if (menuToggle && mobileMenu) {
+            menuToggle.addEventListener('click', () => {
+                menuToggle.classList.toggle('active');
+                mobileMenu.classList.toggle('active');
+                
+                // Prevent body scroll when mobile menu is open
+                document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : 'auto';
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('header') && !e.target.closest('.mobile-menu')) {
+                    menuToggle.classList.remove('active');
+                    mobileMenu.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+
+            // Close menu when clicking on a link
+            const mobileLinks = mobileMenu.querySelectorAll('a');
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    menuToggle.classList.remove('active');
+                    mobileMenu.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                });
+            });
+        }
+    </script>
     <script>
         // Modern loading animation
         document.addEventListener('DOMContentLoaded', function() {
@@ -1655,6 +2023,145 @@
 
         function openAdminPanel() {
             window.location.href = '/admin';
+        }
+
+        // Video sorting and view functions
+        function sortVideos() {
+            const sortBy = document.getElementById('sortSelect').value;
+            const videosGrid = document.getElementById('thumbnailView');
+            const listView = document.getElementById('listView');
+            const channelView = document.getElementById('channelView');
+
+            // Get all video elements
+            let videoElements = [];
+
+            if (videosGrid.style.display !== 'none') {
+                videoElements = Array.from(videosGrid.querySelectorAll('.video-card'));
+            } else if (listView.style.display !== 'none') {
+                videoElements = Array.from(listView.querySelectorAll('.video-item'));
+            } else {
+                // Channel view - sort within each channel group
+                const channelGroups = channelView.querySelectorAll('.channel-videos');
+                channelGroups.forEach(group => {
+                    const videos = Array.from(group.querySelectorAll('.video-card'));
+                    sortVideoElements(videos, sortBy);
+                });
+                return;
+            }
+
+            sortVideoElements(videoElements, sortBy);
+        }
+
+        function sortVideoElements(elements, sortBy) {
+            elements.sort((a, b) => {
+                let aValue, bValue;
+
+                switch (sortBy) {
+                    case 'newest':
+                        aValue = new Date(a.dataset.addedTime || 0);
+                        bValue = new Date(b.dataset.addedTime || 0);
+                        return bValue - aValue; // Newest first
+                    case 'oldest':
+                        aValue = new Date(a.dataset.addedTime || 0);
+                        bValue = new Date(b.dataset.addedTime || 0);
+                        return aValue - bValue; // Oldest first
+                    case 'title':
+                        aValue = a.dataset.title || '';
+                        bValue = b.dataset.title || '';
+                        return aValue.localeCompare(bValue);
+                    case 'views':
+                        aValue = parseInt(a.dataset.views || 0);
+                        bValue = parseInt(b.dataset.views || 0);
+                        return bValue - aValue; // Most viewed first
+                    default:
+                        return 0;
+                }
+            });
+
+            // Reorder elements in DOM
+            const parent = elements[0].parentElement;
+            elements.forEach(element => {
+                parent.appendChild(element);
+            });
+        }
+
+        function setView(viewType) {
+            // Update button states
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Hide all views
+            document.getElementById('thumbnailView').style.display = 'none';
+            document.getElementById('listView').style.display = 'none';
+            document.getElementById('channelView').style.display = 'none';
+
+            // Show selected view
+            switch (viewType) {
+                case 'thumbnail':
+                    document.getElementById('thumbnailView').style.display = 'grid';
+                    break;
+                case 'list':
+                    document.getElementById('listView').style.display = 'block';
+                    break;
+                case 'channel':
+                    document.getElementById('channelView').style.display = 'block';
+                    loadChannelView();
+                    break;
+            }
+        }
+
+        function loadChannelView() {
+            const channelView = document.getElementById('channelView');
+            const videos = Array.from(document.querySelectorAll('#thumbnailView .video-card'));
+
+            // Group videos by uploader/channel
+            const channels = {};
+            videos.forEach(video => {
+                const uploader = video.querySelector('.video-title').textContent.split(' - ')[0] || 'Unknown Channel';
+                if (!channels[uploader]) {
+                    channels[uploader] = [];
+                }
+                channels[uploader].push(video.cloneNode(true));
+            });
+
+            // Clear existing content
+            channelView.innerHTML = '';
+
+            // Create channel groups
+            Object.keys(channels).forEach(channelName => {
+                const channelGroup = document.createElement('div');
+                channelGroup.className = 'channel-group';
+
+                const channelHeader = document.createElement('div');
+                channelHeader.className = 'channel-header';
+
+                const channelAvatar = document.createElement('div');
+                channelAvatar.className = 'channel-avatar';
+                channelAvatar.textContent = channelName.charAt(0).toUpperCase();
+
+                const channelInfo = document.createElement('div');
+                channelInfo.className = 'channel-info';
+                channelInfo.innerHTML = `
+                    <h3>${channelName}</h3>
+                    <p>${channels[channelName].length} video${channels[channelName].length !== 1 ? 's' : ''}</p>
+                `;
+
+                channelHeader.appendChild(channelAvatar);
+                channelHeader.appendChild(channelInfo);
+
+                const channelVideos = document.createElement('div');
+                channelVideos.className = 'channel-videos';
+
+                channels[channelName].forEach(video => {
+                    channelVideos.appendChild(video);
+                });
+
+                channelGroup.appendChild(channelHeader);
+                channelGroup.appendChild(channelVideos);
+                channelView.appendChild(channelGroup);
+            });
         }
     </script>
     <script src="/static/js/modern-section.js"></script>
